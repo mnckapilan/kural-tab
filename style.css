@@ -1,0 +1,81 @@
+body {
+  background-color: #1a1a1a;
+  color: #f2f2f2;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-weight: 300;
+  font-size: 18px;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.quote-container {
+  width: 90%;
+  max-width: 800px;
+  border-radius: 10px;
+  padding: 40px;
+}
+
+.quote-text {
+  font-family: "Noto Sans Tamil", sans-serif;
+  font-size: 32px;
+  line-height: 1.4;
+  margin-bottom: 20px;
+  color: #cccccc;
+  text-align: left;
+}
+
+.quote-explanation {
+  font-size: 20px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  color: #cccccc;
+  text-align: left;
+}
+
+.quote-mv {
+  font-family: "Noto Sans Tamil", sans-serif;
+  font-size: 20px;
+  letter-spacing: .05rem;
+  font-weight: 200;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  color: #cccccc;
+  /* font-style: italic; */
+  text-align: left;
+}
+
+.quote-number {
+  font-size: 28px;
+  color: #999999;
+  text-align: left;
+  margin-bottom: 15px;
+}
+
+@media (max-width: 600px) {
+  .quote-container {
+    width: 95%;
+    padding: 30px;
+  }
+
+  .quote-text {
+    font-size: 20px;
+  }
+
+  .quote-explanation {
+    font-size: 16px;
+  }
+
+  .quote-mv {
+    font-size: 14px;
+  }
+
+  .quote-number {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+}
