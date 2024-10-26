@@ -29,8 +29,8 @@ async function setKural() {
     numberElement.innerHTML = `${kural.Number}`;
     metadataElement.innerHTML = `
       <div class="metadata-tree">
-        <div class="section">${kuralMetadata.section.name} – ${kuralMetadata.section.tamil}</div>
-        <div class="chapter"><a href="https://thirukkural.gokulnath.com/#/thirukkuralchapters/${kuralMetadata.chapter.number}/thirukkurals" target="_blank">${kuralMetadata.chapter.name} – ${kuralMetadata.chapter.tamil}</a></div>
+        <div class="section"> ${kuralMetadata.section.tamil} – ${kuralMetadata.section.name} </div>
+        <div class="chapter"><a href="https://thirukkural.gokulnath.com/#/thirukkuralchapters/${kuralMetadata.chapter.number}/thirukkurals" target="_blank">${kuralMetadata.chapter.tamil} – ${kuralMetadata.chapter.name}</a></div>
       </div>
     `;
 
@@ -41,7 +41,7 @@ async function setKural() {
         kuralLines[0].offsetWidth,
         kuralLines[1].offsetWidth
       );
-      explanationElement.style.width = `${maxWidth}px`;
+      explanationElement.style.idth = `${maxWidth}px`;
       mvElement.style.width = `${maxWidth}px`;
     }, 0);
   } catch (error) {
