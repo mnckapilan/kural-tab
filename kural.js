@@ -28,8 +28,10 @@ async function setKural() {
     // Display kural number and metadata
     numberElement.innerHTML = `${kural.Number}`;
     metadataElement.innerHTML = `
-      <div>${kuralMetadata.section.name} – ${kuralMetadata.section.tamil}</div>
-      <div><a href="https://thirukkural.gokulnath.com/#/thirukkuralchapters/${kuralMetadata.chapter.number}/thirukkurals" target="_blank">${kuralMetadata.chapter.name} – ${kuralMetadata.chapter.tamil}</a></div>
+      <div class="metadata-tree">
+        <div class="section">${kuralMetadata.section.name} – ${kuralMetadata.section.tamil}</div>
+        <div class="chapter"><a href="https://thirukkural.gokulnath.com/#/thirukkuralchapters/${kuralMetadata.chapter.number}/thirukkurals" target="_blank">${kuralMetadata.chapter.name} – ${kuralMetadata.chapter.tamil}</a></div>
+      </div>
     `;
 
     // Set the width of explanation and MV based on the widest Kural line
