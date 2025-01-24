@@ -17,7 +17,7 @@ jobs:
 
       - name: Build
         run: |-
-          zip -r chrome-extension-${{ github.sha }}.zip dist
+          zip -r chrome-extension-${{ github.sha }}.zip .
 
       - name: Archive chrome-extension artifact
         uses: actions/upload-artifact@v4
