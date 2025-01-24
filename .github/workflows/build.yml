@@ -1,0 +1,43 @@
+name: Reusable Build Workflow
+
+on:
+  workflow_call:
+    inputs:
+      artifact_name:
+        description: "Name of the build artifact"
+        required: true
+        type: string
+      retention_days:
+        description: "Number of days to retain the build artifact"
+        required: true
+        type: number
+    outputs:
+      artifact_name:
+        description: "The name of the built artifact"
+        value: ${{ inputs.artifact_name }}
+
+jobs:
+  build-extension:
+    name: Build Chrome Extension
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Create Dist Directory
+        run: mkdir -p dist
+
+      - name: Copy Relevant Files to Dist
+        run: rsync -av --progress src/ dist/ --exclude=".git" --exclude="node_modules" --exclude="tests" --exclude=".*"
+
+      - name: Upload Unzipped Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: dist/
+          retention-days: ${{ inputs.retention_days }}

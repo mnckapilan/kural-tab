@@ -9,32 +9,10 @@ on:
 
 jobs:
   build-extension:
-    name: Build Chrome Extension Artifact
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Create Dist Directory
-        run: mkdir -p dist
-
-      - name: Copy Relevant Files to Dist
-        run: rsync -av --progress src/ dist/ --exclude=".git" --exclude="node_modules" --exclude="tests" --exclude=".*"
-
-      - name: List Files in Dist (Debugging)
-        run: ls -la dist
-
-      - name: Upload Unzipped Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: kural-tab
-          path: dist/
-          retention-days: 5
+    uses: ./.github/workflows/build.yml
+    with:
+      artifact_name: kural-tab-${{ github.sha }}
+      retention_days: 20
 
   upload-extension:
     name: Upload Extension
@@ -51,8 +29,8 @@ jobs:
       - name: Download Unzipped Artifact
         uses: actions/download-artifact@v4
         with:
-          name: kural-tab
-          path: dist/  # Extracts files directly into 'dist/'
+          name: kural-tab-${{ github.sha }}
+          path: dist/
 
       - name: Zip Extension for Chrome Web Store
         run: zip -r kural-tab.zip dist/
