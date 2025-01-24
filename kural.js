@@ -22,10 +22,8 @@ async function setKural() {
     explanationElement.innerHTML = kural.explanation;
     mvElement.innerHTML = kural.mv;
 
-    // Find the metadata for this kural
     const kuralMetadata = findKuralMetadata(metadataData[0], kural.Number);
 
-    // Display kural number and metadata
     numberElement.innerHTML = `${kural.Number}`;
     metadataElement.innerHTML = `
       <a href="https://thirukkural.gokulnath.com/#/thirukkuralchapters/${kuralMetadata.chapter.number}/thirukkurals" target="_blank" class="metadata-tree">
