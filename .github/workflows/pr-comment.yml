@@ -1,4 +1,4 @@
-name: PR Comment with Direct Artifact Link
+name: PR Comment with Build Links
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - main
     types:
       - opened
-      - synchronize  # Runs when new commits are pushed to the PR
+      - synchronize
 
 jobs:
   build-extension:
@@ -22,22 +22,14 @@ jobs:
     permissions:
       pull-requests: write  # Allows posting PR comments
     steps:
-      - name: Get Latest Artifact ID
-        id: get-artifact
-        run: |
-          ARTIFACT_ID=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --jq '.artifacts[] | select(.name == "kural-tab-${{ github.event.pull_request.number }}") | .id')
-          echo "ARTIFACT_ID=$ARTIFACT_ID" >> $GITHUB_ENV
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create PR Comment with Direct Download Link
+      - name: Create PR Comment
         uses: thollander/actions-comment-pull-request@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           message: |
             🚀 **Preview Build Available for Testing**  
-            Thanks for your contribution! Here’s the direct download link to the artifact:
+            Thanks for your contribution! Here are some useful links:
 
-            📦 **[Download Extension](https://github.com/${{ github.repository }}/suites/${{ github.run_id }}/artifacts/${{ env.ARTIFACT_ID }})**  
+            🔗 **Download Build**: [Artifacts Page](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
             Let us know if you have any feedback! 🚀
