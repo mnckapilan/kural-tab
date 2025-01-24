@@ -1,4 +1,4 @@
-name: Update Chrome Extension
+name: Build and Upload Kural Tab
 
 on:
   push:
@@ -8,28 +8,41 @@ on:
       - v*.*.*
 
 jobs:
-  build-chrome-extension:
+  build-extension:
     name: Build Chrome Extension Artifact
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Build
-        run: |-
-          zip -r chrome-extension-${{ github.sha }}.zip .
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
-      - name: Archive chrome-extension artifact
+      - name: Create Dist Directory
+        run: mkdir -p dist
+
+      - name: Copy Relevant Files to Dist
+        run: rsync -av --progress src/ dist/ --exclude=".git" --exclude="node_modules" --exclude="tests" --exclude=".*"
+
+      - name: List Files in Dist (Debugging)
+        run: ls -la dist
+
+      - name: Zip Chrome Extension Artifact
+        run: zip -r kural-tab-${{ github.sha }}.zip dist
+
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chrome-extension-${{ github.sha }}
-          path: chrome-extension-${{ github.sha }}.zip
-          retention-days: 1  # Optional: Set retention duration for artifacts
+          name: kural-tab-${{ github.sha }}
+          path: kural-tab-${{ github.sha }}.zip
+          retention-days: 5
 
   upload-extension:
-    name: Upload extension
+    name: Upload Extension
     runs-on: ubuntu-latest
-    needs: build-chrome-extension
+    needs: build-extension
     env:
       EXTENSION_ID: <extension id here>
 
@@ -38,19 +51,18 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Download bundle artifact
+      - name: Download Bundle Artifact
         uses: actions/download-artifact@v4
         with:
-          name: chrome-extension-${{ github.sha }}
+          name: kural-tab-${{ github.sha }}
 
-      - name: Install webstore CLI
-        run: |-
-          npm install -g chrome-webstore-upload-cli
+      - name: Install Webstore CLI
+        run: npm install -g chrome-webstore-upload-cli
 
-      - name: Upload step
-        run: |-
+      - name: Upload to Chrome Web Store
+        run: |
           chrome-webstore-upload upload \
-            --source chrome-extension-${{ github.sha }}.zip \
+            --source kural-tab-${{ github.sha }}.zip \
             --extension-id ${{ env.EXTENSION_ID }} \
             --client-id ${{ secrets.CI_GOOGLE_CLIENT_ID }} \
             --client-secret ${{ secrets.CI_GOOGLE_CLIENT_SECRET }} \
