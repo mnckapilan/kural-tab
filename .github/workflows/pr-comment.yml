@@ -20,12 +20,20 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-extension
     permissions:
-      pull-requests: write  # Allows posting PR comments
+      pull-requests: write
     steps:
-      - name: Create PR Comment
+      - name: Delete Old PR Comments
         uses: thollander/actions-comment-pull-request@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          comment-tag: build-preview  
+          delete: true 
+
+      - name: Post New PR Comment
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          comment-tag: build-preview
           message: |
             🚀 **Preview Build Available for Testing**  
             Thanks for your contribution! Here are some useful links:
