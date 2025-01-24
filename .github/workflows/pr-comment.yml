@@ -1,0 +1,32 @@
+name: PR Comment with Build Links
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize  # Also runs when new commits are pushed to the PR
+
+jobs:
+  build-extension:
+    uses: ./.github/workflows/build.yml
+    with:
+      artifact_name: kural-tab-${{ github.event.pull_request.number }}
+      retention_days: 3
+
+  comment-pr:
+    name: Comment on PR
+    runs-on: ubuntu-latest
+    needs: build-extension
+    steps:
+      - name: Create PR Comment
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            🚀 **Preview Build Available for Testing**  
+            Thanks for your contribution! Here are some useful links:
+
+            🔗 **Download Build**: [Artifacts Page](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            
