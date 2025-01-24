@@ -29,14 +29,11 @@ jobs:
       - name: List Files in Dist (Debugging)
         run: ls -la dist
 
-      - name: Zip Chrome Extension Artifact
-        run: zip -r kural-tab-${{ github.sha }}.zip dist
-
-      - name: Upload Artifact
+      - name: Upload Unzipped Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: kural-tab-${{ github.sha }}
-          path: kural-tab-${{ github.sha }}.zip
+          name: kural-tab
+          path: dist/
           retention-days: 5
 
   upload-extension:
@@ -51,10 +48,14 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Download Bundle Artifact
+      - name: Download Unzipped Artifact
         uses: actions/download-artifact@v4
         with:
-          name: kural-tab-${{ github.sha }}
+          name: kural-tab
+          path: dist/  # Extracts files directly into 'dist/'
+
+      - name: Zip Extension for Chrome Web Store
+        run: zip -r kural-tab.zip dist/
 
       - name: Install Webstore CLI
         run: npm install -g chrome-webstore-upload-cli
@@ -62,7 +63,7 @@ jobs:
       - name: Upload to Chrome Web Store
         run: |
           chrome-webstore-upload upload \
-            --source kural-tab-${{ github.sha }}.zip \
+            --source kural-tab.zip \
             --extension-id ${{ env.EXTENSION_ID }} \
             --client-id ${{ secrets.CI_GOOGLE_CLIENT_ID }} \
             --client-secret ${{ secrets.CI_GOOGLE_CLIENT_SECRET }} \
