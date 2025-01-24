@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Kural Tab",
+  "version": "1.0.0",
+  "description": "Displays a random Thirukkural on each new tab.",
+  "permissions": ["scripting", "storage"],
+  "action": {
+    "default_title": "Kural Tab"
+  },
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
