@@ -20,24 +20,18 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-extension
     permissions:
-      pull-requests: write
+      pull-requests: write  # Allows updating PR comments
     steps:
-      - name: Delete Old PR Comments
+      - name: Post PR Comment (Auto-Replace Old)
         uses: thollander/actions-comment-pull-request@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          comment-tag: build-preview  
-          delete: true 
-
-      - name: Post New PR Comment
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          comment-tag: build-preview
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          comment_tag: build-preview 
+          mode: upsert
           message: |
             🚀 **Preview Build Available for Testing**  
             Thanks for your contribution! Here are some useful links:
 
-            🔗 **Download Build**: [Artifacts Page](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            🔗 **[Download Build](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**  
 
             Let us know if you have any feedback! 🚀
