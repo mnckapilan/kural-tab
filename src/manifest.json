@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Kural Tab",
   "version": "1.0.0",
-  "description": "Displays a random Thirukkural on each new tab.",
+  "description": "Replace your new tab with daily Thirukkural couplets, offering timeless wisdom and reflection.",
   "permissions": ["scripting", "storage"],
   "action": {
     "default_title": "Kural Tab"

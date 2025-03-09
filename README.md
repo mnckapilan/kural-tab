@@ -7,11 +7,7 @@ Kural Tab is a Chrome extension that replaces your new tab page with a random Th
 - **Random Thirukkural Display**: Each new tab presents a randomly selected Thirukkural couplet.
 - **Dark Mode / Light Mode**: Toggle dark mode or light mode.
 
-## Installation
-
-Install Kural Tab from the Chrome Web Store:
-
-[![Install from Chrome Web Store](https://developer.chrome.com/webstore/images/ChromeWebStore_Badge_v2_206x58.png)](https://chrome.google.com/webstore/detail/kural-tab/njidhifbpgbfadoffhibkjnnkfhcglpc)
+[![Chrome](assets/chrome.svg)](https://chrome.google.com/webstore/detail/kural-tab/njidhifbpgbfadoffhibkjnnkfhcglpc)
 
 ## Development Setup
 
