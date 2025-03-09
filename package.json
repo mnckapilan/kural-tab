@@ -1,0 +1,27 @@
+{
+  "name": "kural-tab",
+  "version": "1.0.0",
+  "description": "New tab extension",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+     "build": "webpack --config webpack.prod.js",
+     "start": "webpack --watch --config webpack.dev.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mnckapilan/kural-tab.git"
+  },
+  "author": "mnckapilan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mnckapilan/kural-tab/issues"
+  },
+  "homepage": "https://github.com/mnckapilan/kural-tab#readme",
+  "devDependencies": {
+    "copy-webpack-plugin": "^13.0.0",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1",
+    "webpack-merge": "^6.0.1"
+  }
+}
