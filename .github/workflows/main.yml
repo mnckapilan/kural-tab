@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-extension
     env:
-      EXTENSION_ID: <extension id here>
+      EXTENSION_ID: njidhifbpgbfadoffhibkjnnkfhcglpc
 
     steps:
       - uses: actions/setup-node@v4
