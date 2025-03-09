@@ -9,8 +9,8 @@ async function setKural() {
 
   try {
     const [kuralResponse, metadataResponse] = await Promise.all([
-      fetch("thirukkural.json"),
-      fetch("metadata.json"),
+      fetch("data/thirukkural.json"),
+      fetch("data/metadata.json"),
     ]);
     const kuralData = await kuralResponse.json();
     const metadataData = await metadataResponse.json();

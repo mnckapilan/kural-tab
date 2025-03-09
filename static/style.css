@@ -1,0 +1,235 @@
+:root {
+    --bg-color: #1a1a1a;
+    --text-color: #f2f2f2;
+    --quote-color: #cccccc;
+    --metadata-color: #999999;
+    --tree-color: #555555;
+}
+
+.light-mode {
+    --bg-color: #d4d4d4;
+    --text-color: #1a1a1a;
+    --quote-color: #333333;
+    --metadata-color: #434343;
+    --tree-color: #494949;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-weight: 300;
+    font-size: 18px;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: none;
+}
+
+body.no-transition,
+body.no-transition *,
+body.no-transition *:before,
+body.no-transition *:after {
+    transition: none !important;
+}
+
+body.light-mode,
+body.dark-mode {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.quote-container {
+    width: 90%;
+    max-width: 800px;
+    border-radius: 10px;
+    padding: 40px;
+}
+
+.quote-text {
+    font-family: "Noto Sans Tamil", sans-serif;
+    font-size: 32px;
+    line-height: 1.4;
+    margin-bottom: 20px;
+    color: var(--quote-color);
+    text-align: left;
+}
+
+.quote-explanation, .quote-mv {
+    font-size: 20px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    color: var(--quote-color);
+    text-align: left;
+}
+
+.quote-number {
+    font-size: 28px;
+    color: var(--metadata-color);
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.quote-metadata {
+    font-size: 16px;
+    color: var(--metadata-color);
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.metadata-tree {
+    position: relative;
+    padding-left: 15px;
+    display: block;
+    color: var(--metadata-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.metadata-tree:visited {
+    color: var(--metadata-color);
+}
+
+.metadata-tree:hover,
+.metadata-tree:active {
+    color: var(--quote-color);
+}
+
+.metadata-tree::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--tree-color);
+    transition: background-color 0.3s ease;
+}
+
+.metadata-tree .section {
+    margin-bottom: 5px;
+}
+
+.metadata-tree .chapter {
+    position: relative;
+    padding-left: 10px;
+}
+
+.metadata-tree .chapter::before {
+    content: '';
+    position: absolute;
+    left: -15px;
+    top: 50%;
+    width: 16px;
+    height: 1px;
+    background-color: var(--tree-color);
+    transition: background-color 0.3s ease;
+}
+
+.metadata-tree:hover::before,
+.metadata-tree:hover .chapter::before {
+    background-color: var(--quote-color);
+}
+
+.mode-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+}
+
+.mode-switch {
+    display: none;
+}
+
+.mode-switch-label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: var(--bg-color);
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.sun-moon-icon {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.3s ease;
+}
+
+.sun, .sun-ray {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.moon {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.mode-switch:checked + .mode-switch-label .sun,
+.mode-switch:checked + .mode-switch-label .sun-ray {
+    opacity: 1;
+}
+
+.mode-switch:checked + .mode-switch-label .moon {
+    opacity: 0;
+}
+
+.mode-switch:checked + .mode-switch-label .sun-moon-icon {
+    transform: rotate(180deg);
+}
+
+body.no-transition .mode-switch-label,
+body.no-transition .sun-moon-icon,
+body.no-transition .sun,
+body.no-transition .sun-ray,
+body.no-transition .moon {
+    transition: none !important;
+}
+
+a { color: inherit; 
+  text-decoration: none;
+} 
+
+
+
+@media (max-width: 600px) {
+    .quote-container {
+        width: 95%;
+        padding: 30px;
+    }
+
+    .quote-text {
+        font-size: 20px;
+    }
+
+    .quote-explanation, .quote-mv {
+        font-size: 16px;
+    }
+
+    .quote-number {
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    .quote-metadata {
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+}
+
+.mode-switch-label,
+.mode-switch-label::after {
+    transition: all 0.3s ease;
+}
+
+body.no-transition .mode-switch-label,
+body.no-transition .mode-switch-label::after {
+    transition: none !important;
+}
