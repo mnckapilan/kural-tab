@@ -29,8 +29,10 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Create Dist Directory
-        run: mkdir -p dist
+      - name: Run webpack build
+        run: |
+          npm install
+          npm run build
 
       - name: Copy Relevant Files to Dist
         run: rsync -av --progress src/ dist/ --exclude=".git" --exclude="node_modules" --exclude="tests" --exclude=".*"
