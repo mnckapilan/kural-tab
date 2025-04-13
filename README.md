@@ -1,6 +1,10 @@
+
+![Banner](assets/banner.png)
+
 # Kural Tab
 
 Kural Tab is a Chrome extension that replaces your new tab page with a random Thirukkural couplet, offering timeless wisdom each time you open a new tab.
+
 
 ## Features
 
