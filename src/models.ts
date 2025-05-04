@@ -74,6 +74,15 @@ export interface KuralMetadataResult {
 }
 
 /**
+ * Represents a starred Kural with its metadata
+ */
+export interface StarredKural {
+    readonly kural: Kural;
+    readonly metadata: KuralMetadataResult | null;
+    readonly starredAt: number; // timestamp when starred
+}
+
+/**
  * Theme constants
  */
 export const THEME = {
@@ -104,7 +113,12 @@ export const ELEMENT_IDS = {
     MV: "mv",
     NUMBER: "number",
     METADATA: "metadata",
-    MODE_SWITCH: "mode-switch"
+    MODE_SWITCH: "mode-switch",
+    STAR_BUTTON: "star-button",
+    STARRED_LIST: "starred-list",
+    STARRED_CONTAINER: "starred-container",
+    BACK_TO_RANDOM: "back-to-random",
+    STARRED_PAGE_LINK: "starred-page-link"
 } as const;
 
 /**
@@ -119,3 +133,19 @@ export const FILE_PATHS = {
     KURAL_DATA: "data/thirukkural.json",
     METADATA: "data/metadata.json"
 } as const;
+
+/**
+ * Storage keys for Chrome storage
+ */
+export const STORAGE_KEYS = {
+    STARRED_KURALS: "starredKurals",
+    THEME: "theme"
+} as const;
+
+/**
+ * Represents the application pages
+ */
+export enum AppPage {
+    RANDOM = "random",
+    STARRED = "starred"
+}
