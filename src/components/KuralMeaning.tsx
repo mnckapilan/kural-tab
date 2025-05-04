@@ -19,4 +19,6 @@ const KuralMeaning = forwardRef<HTMLDivElement, KuralMeaningProps>(
   }
 );
 
+KuralMeaning.displayName = "KuralMeaning";
+
 export default KuralMeaning;
