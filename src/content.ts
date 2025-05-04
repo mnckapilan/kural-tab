@@ -1,52 +1,8 @@
-// content.ts - Main entry point that orchestrates the application
+// This file is now just an entry point for our React application
+// The actual logic has been moved to React components
 
-import { ELEMENT_IDS } from './models';
-import { addEventListenerById } from './domUtils';
-import { KuralService } from './kuralService';
-import { ThemeManager } from './themeManager';
-import { KuralRenderer } from './kuralRenderer';
+// Import React application entry point
+import './index';
 
-/**
- * Initializes and sets up the Thirukkural display
- */
-async function setKural(): Promise<void> {
-  try {
-    // Fetch the data using the service
-    const { kuralData, metadataData } = await KuralService.fetchKuralData();
-
-    // Get random kural
-    const kural = KuralService.getRandomKural(kuralData);
-
-    // Find metadata
-    const kuralMetadata = KuralService.findKuralMetadata(metadataData[0], kural.number);
-
-    // Render the kural using our renderer
-    KuralRenderer.renderKural(kural, kuralMetadata);
-
-  } catch (error) {
-    // Handle errors using our renderer
-    KuralRenderer.renderError(error);
-  }
-}
-
-/**
- * Initialize the application when the DOM is ready
- */
-function initializeApp(): void {
-  ThemeManager.setInitialTheme();
-  setKural();
-}
-
-/**
- * Set up event listeners
- */
-function setupEventListeners(): void {
-  addEventListenerById(ELEMENT_IDS.MODE_SWITCH, "change", () => {
-    ThemeManager.toggleTheme();
-  });
-
-  document.addEventListener("DOMContentLoaded", initializeApp);
-}
-
-// Initialize event listeners
-setupEventListeners();
+// No need for additional code as React will handle the UI rendering
+// The index.tsx file initializes the React app and renders it in the DOM

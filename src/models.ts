@@ -4,57 +4,78 @@
  * Represents a Kural in our application
  */
 export interface Kural {
-    readonly line1: string;
-    readonly line2: string;
-    readonly explanation: string;
-    readonly mv: string;
-    readonly number: number;
+    Line1: string;
+    Line2: string;
+    Translation: string;
+    mv: string;
+    Number: number;
 }
 
 /**
  * Represents the entire Kural dataset
  */
 export interface KuralData {
-    readonly kural: ReadonlyArray<Kural>;
+    kural: ReadonlyArray<Kural>;
 }
 
 /**
  * Represents a chapter in the Thirukkural
  */
 export interface Chapter {
-    readonly start: number;
-    readonly end: number;
-    readonly name: string;
-    readonly translation: string;
-    readonly number: number;
+    name: string;
+    translation: string;
+    transliteration?: string;
+    number: number;
+    start: number;
+    end: number;
 }
 
 /**
- * Represents a group of chapters
+ * Represents the chapters container
+ */
+export interface ChaptersContainer {
+    tamil: string;
+    detail: ReadonlyArray<Chapter>;
+}
+
+/**
+ * Represents a chapter group (இயல்) in the Thirukkural
  */
 export interface ChapterGroup {
-    readonly detail: ReadonlyArray<{
-        readonly chapters: {
-            readonly detail: ReadonlyArray<Chapter>;
-        };
-    }>;
+    name: string;
+    translation: string;
+    transliteration?: string;
+    number: number;
+    chapters: ChaptersContainer;
+}
+
+/**
+ * Represents the chapter group container
+ */
+export interface ChapterGroupContainer {
+    tamil: string;
+    detail: ReadonlyArray<ChapterGroup>;
 }
 
 /**
  * Represents a section of the Thirukkural
  */
 export interface Section {
-    readonly name: string;
-    readonly translation: string;
-    readonly chapterGroup: ChapterGroup;
+    name: string;
+    translation: string;
+    transliteration?: string;
+    number: number;
+    chapterGroup: ChapterGroupContainer;
 }
 
 /**
  * Represents the metadata structure for sections
  */
 export interface MetadataSection {
-    readonly section: {
-        readonly detail: ReadonlyArray<Section>;
+    tamil: string;
+    section: {
+        tamil: string;
+        detail: ReadonlyArray<Section>;
     };
 }
 
@@ -62,14 +83,14 @@ export interface MetadataSection {
  * Represents the metadata for a specific Kural
  */
 export interface KuralMetadataResult {
-    readonly section: {
-        readonly name: string;
-        readonly tamil: string;
+    section: {
+        name: string;
+        tamil: string;
     };
-    readonly chapter: {
-        readonly name: string;
-        readonly tamil: string;
-        readonly number: number;
+    chapter: {
+        name: string;
+        tamil: string;
+        number: number;
     };
 }
 
