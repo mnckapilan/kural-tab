@@ -4,6 +4,9 @@
     --quote-color: #cccccc;
     --metadata-color: #999999;
     --tree-color: #555555;
+    --star-color: #FFD700;
+    --button-bg: #333333;
+    --button-text: #f2f2f2;
 }
 
 .light-mode {
@@ -12,6 +15,9 @@
     --quote-color: #333333;
     --metadata-color: #434343;
     --tree-color: #494949;
+    --star-color: #FFD700;
+    --button-bg: #555555;
+    --button-text: #ffffff;
 }
 
 body {
@@ -197,7 +203,175 @@ a { color: inherit;
   text-decoration: none;
 } 
 
+/* Star Button Styles */
+.star-button-container {
+    position: relative;
+    float: left;
+    margin-bottom: 10px;
+    width: 100%;
+    text-align: left;
+}
 
+.star-button {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    color: var(--metadata-color);
+    padding: 8px;
+    border-radius: 50%;
+    outline: none;
+}
+
+.star-button:hover {
+    transform: scale(1.2);
+}
+
+.star-button.starred {
+    color: var(--star-color);
+}
+
+.star-button.not-starred:hover {
+    color: var(--quote-color);
+}
+
+/* Starred Page Styles */
+.starred-link-container {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+.starred-link {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    padding: 8px 16px;
+    font-size: 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.starred-link:hover {
+    opacity: 0.9;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.starred-container {
+    width: 90%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--metadata-color);
+}
+
+.error-state {
+    color: #ff6b6b;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.back-button {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    padding: 8px 16px;
+    font-size: 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+    opacity: 0.9;
+}
+
+/* Starred List Styles */
+.starred-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.starred-item {
+    margin-bottom: 30px;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.05);
+    transition: transform 0.2s ease;
+    text-align: left;
+}
+
+.light-mode .starred-item {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.starred-item:hover {
+    transform: translateY(-2px);
+}
+
+.starred-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.kural-number {
+    font-weight: bold;
+    font-size: 18px;
+    color: var(--metadata-color);
+}
+
+.metadata-brief {
+    flex-grow: 1;
+    margin-left: 10px;
+    font-size: 14px;
+    color: var(--metadata-color);
+}
+
+.unstar-button {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--star-color);
+    padding: 5px;
+}
+
+.unstar-button:hover {
+    transform: scale(1.1);
+}
+
+.starred-content .kural-text {
+    font-family: "Noto Sans Tamil", sans-serif;
+    font-size: 24px;
+    line-height: 1.4;
+    margin-bottom: 15px;
+    color: var(--quote-color);
+}
+
+.starred-content .kural-explanation, 
+.starred-content .kural-mv {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    color: var(--quote-color);
+}
 
 @media (max-width: 600px) {
     .quote-container {
@@ -221,6 +395,19 @@ a { color: inherit;
     .quote-metadata {
         font-size: 12px;
         margin-bottom: 10px;
+    }
+    
+    .starred-content .kural-text {
+        font-size: 18px;
+    }
+    
+    .starred-content .kural-explanation, 
+    .starred-content .kural-mv {
+        font-size: 14px;
+    }
+    
+    .back-button, .starred-link {
+        font-size: 14px;
     }
 }
 
