@@ -12,14 +12,12 @@ import {
  * Custom error for Kural data operations
  */
 export class KuralDataError extends Error {
-    constructor(message: string, public readonly cause?: unknown) {
+    public readonly cause: unknown;
+
+    constructor(message: string, cause?: unknown) {
         super(message);
         this.name = 'KuralDataError';
-
-        // Maintain proper stack trace in Node.js environments
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, KuralDataError);
-        }
+        this.cause = cause;
     }
 }
 
@@ -78,8 +76,7 @@ export class KuralService {
      * @returns A randomly selected kural
      */
     public static getRandomKural(kuralData: KuralData): Kural {
-        const totalKurals = kuralData.kural.length;
-        const randomIndex = Math.floor(Math.random() * totalKurals);
+        const randomIndex = Math.floor(Math.random() * kuralData.kural.length);
         return kuralData.kural[randomIndex];
     }
 
@@ -94,17 +91,33 @@ export class KuralService {
         kuralNumber: number
     ): KuralMetadataResult | null {
         if (!metadata?.section?.detail) {
+            console.error('Metadata section detail is missing or invalid:', metadata);
             return null;
         }
 
+        console.log(`Finding metadata for Kural number: ${kuralNumber}`);
+
+        // Iterate through each section (அறத்துப்பால், பொருட்பால், காமத்துப்பால்)
         for (const section of metadata.section.detail) {
-            if (!section.chapterGroup?.detail) continue;
+            if (!section.chapterGroup?.detail) {
+                console.log(`Section missing chapterGroup: ${section.name}`);
+                continue;
+            }
 
+            // Iterate through each chapter group (இயல்)
             for (const chapterGroup of section.chapterGroup.detail) {
-                if (!chapterGroup.chapters?.detail) continue;
+                if (!chapterGroup.chapters?.detail) {
+                    console.log(`ChapterGroup missing chapters: ${chapterGroup.name}`);
+                    continue;
+                }
 
+                // Iterate through each chapter (அதிகாரம்)
                 for (const chapter of chapterGroup.chapters.detail) {
+                    console.log(`Checking chapter: ${chapter.name} (${chapter.start}-${chapter.end})`);
+
                     if (kuralNumber >= chapter.start && kuralNumber <= chapter.end) {
+                        console.log(`Found match! Kural ${kuralNumber} is in chapter: ${chapter.name}`);
+
                         return {
                             section: {
                                 name: section.translation,
@@ -120,6 +133,8 @@ export class KuralService {
                 }
             }
         }
+
+        console.error(`No metadata found for Kural number: ${kuralNumber}`);
         return null;
     }
 
