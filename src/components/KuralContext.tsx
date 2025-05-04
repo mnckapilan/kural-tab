@@ -38,13 +38,10 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      // Fetch the data
       const { kuralData, metadataData } = await KuralService.fetchKuralData();
 
-      // Get random kural
       const randomKural = KuralService.getRandomKural(kuralData);
 
-      // Find metadata using the correct property (Number instead of number)
       const kuralMetadata = KuralService.findKuralMetadata(
         metadataData[0],
         randomKural.Number

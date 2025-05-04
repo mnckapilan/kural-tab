@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 
 /**
  * A custom hook to handle Kural layout alignment
- * This replaces the direct DOM manipulation from kuralRenderer.ts
  */
 export const useKuralLayout = () => {
     const [textWidth, setTextWidth] = useState<number>(0);
