@@ -19,4 +19,6 @@ const KuralExplanation = forwardRef<HTMLDivElement, KuralExplanationProps>(
   }
 );
 
+KuralExplanation.displayName = "KuralExplanation";
+
 export default KuralExplanation;

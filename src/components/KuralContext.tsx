@@ -5,12 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import {
-  Kural,
-  KuralData,
-  MetadataSection,
-  KuralMetadataResult,
-} from "../models";
+import { Kural, KuralMetadataResult } from "../models";
 import { KuralService } from "../kuralService";
 
 interface KuralContextType {
