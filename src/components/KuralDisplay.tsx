@@ -92,7 +92,7 @@ const KuralDisplay: React.FC = () => {
           type="button"
           className="favourites-toggle"
           onClick={() => setShowFavourites((prev) => !prev)}
-          disabled={favouriteItems.length === 0}
+          disabled={favouriteItems.length === 0 && !showFavourites}
         >
           {showFavourites ? "Hide Favourites" : "See Favourites"}
         </button>
@@ -102,18 +102,26 @@ const KuralDisplay: React.FC = () => {
               <div className="favourites-empty">No favourites yet.</div>
             )}
             {favouriteItems.map((item) => (
-              <button
-                key={item.Number}
-                type="button"
-                className="favourites-item"
-                onClick={() => selectKuralByNumber(item.Number)}
-              >
-                <span className="favourites-number">{item.Number}</span>
-                <span className="favourites-text">
-                  <span className="favourites-line">{item.Line1}</span>
-                  <span className="favourites-line">{item.Line2}</span>
-                </span>
-              </button>
+              <div key={item.Number} className="favourites-item">
+                <button
+                  type="button"
+                  className="favourites-select"
+                  onClick={() => selectKuralByNumber(item.Number)}
+                >
+                  <span className="favourites-number">{item.Number}</span>
+                  <span className="favourites-text">
+                    <span className="favourites-line">{item.Line1}</span>
+                    <span className="favourites-line">{item.Line2}</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="favourites-remove"
+                  onClick={() => toggleFavourite(item.Number)}
+                >
+                  Remove
+                </button>
+              </div>
             ))}
           </div>
         )}
