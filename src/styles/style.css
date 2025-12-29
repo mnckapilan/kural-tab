@@ -42,6 +42,21 @@ body.dark-mode {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+.dev-indicator {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    z-index: 1000;
+    pointer-events: none;
+}
+
 .quote-container {
     width: 90%;
     max-width: 800px;
