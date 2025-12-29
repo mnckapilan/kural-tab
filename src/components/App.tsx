@@ -5,6 +5,8 @@ import { KuralProvider } from "./KuralContext";
 import ThemeToggle from "./ThemeToggle";
 import KuralDisplay from "./KuralDisplay";
 
+declare const __DEV__: boolean;
+
 declare global {
   interface Window {
     chrome: typeof chrome;
@@ -26,6 +28,7 @@ const AppContent: React.FC = () => {
     <div className="app">
       <ThemeToggle />
       <KuralDisplay />
+      {__DEV__ && <div className="dev-indicator">DEV BUILD</div>}
     </div>
   );
 };
