@@ -137,18 +137,4 @@ export class KuralService {
         console.error(`No metadata found for Kural number: ${kuralNumber}`);
         return null;
     }
-
-    /**
-     * Generate the metadata HTML for a kural
-     * @param metadata The kural metadata
-     * @returns HTML string for the metadata
-     */
-    public static generateMetadataHtml(metadata: KuralMetadataResult | null): string {
-        if (!metadata) return '';
-
-        return `<a href="https://thirukkural.gokulnath.com/#/thirukkuralchapters/${metadata.chapter.number}/thirukkurals" target="_blank" class="metadata-tree">
-      <div class="section">${metadata.section.tamil} – ${metadata.section.name}</div>
-      <div class="chapter">${metadata.chapter.tamil} – ${metadata.chapter.name}</div>
-    </a>`;
-    }
 }

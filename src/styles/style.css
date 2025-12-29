@@ -59,6 +59,11 @@ body.dark-mode {
     /* Debug styles to ensure visibility */
     min-height: 30px;
 }
+.quote-text > div {
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: keep-all;
+}
 
 .quote-explanation, .quote-mv {
     font-size: 20px;
