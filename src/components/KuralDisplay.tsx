@@ -58,6 +58,14 @@ const KuralDisplay: React.FC = () => {
         <span>{kural.Number}</span>
         <button
           type="button"
+          className="refresh-button"
+          onClick={refreshKural}
+          aria-label="Randomize kural"
+        >
+          Randomise
+        </button>
+        <button
+          type="button"
           className={`star-button ${isFavourite(kural.Number) ? "is-starred" : ""}`}
           onClick={() => toggleFavourite(kural.Number)}
           aria-pressed={isFavourite(kural.Number)}

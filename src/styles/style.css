@@ -102,6 +102,23 @@ body.dark-mode {
     gap: 10px;
 }
 
+.refresh-button {
+    border: 1px solid var(--tree-color);
+    background: transparent;
+    color: var(--metadata-color);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.refresh-button:hover {
+    color: var(--text-color);
+    border-color: var(--text-color);
+}
+
 .quote-metadata {
     font-size: 16px;
     color: var(--metadata-color);
