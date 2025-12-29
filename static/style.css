@@ -71,6 +71,26 @@ body.dark-mode {
     color: var(--metadata-color);
     text-align: left;
     margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.refresh-button {
+    border: 1px solid var(--tree-color);
+    background: transparent;
+    color: var(--metadata-color);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.refresh-button:hover {
+    color: var(--text-color);
+    border-color: var(--text-color);
 }
 
 .quote-metadata {
