@@ -30,6 +30,10 @@ body {
     transition: none;
 }
 
+button {
+    font-family: inherit;
+}
+
 body.no-transition,
 body.no-transition *,
 body.no-transition *:before,
@@ -243,6 +247,11 @@ a { color: inherit;
     cursor: pointer;
 }
 
+.star-button:hover {
+    color: var(--text-color);
+    border-color: var(--text-color);
+}
+
 .star-button.is-starred {
     color: var(--text-color);
     border-color: var(--text-color);
@@ -263,6 +272,7 @@ a { color: inherit;
 .favourites-section {
     margin-top: 20px;
     text-align: left;
+    position: relative;
 }
 
 .favourites-toggle {
@@ -280,11 +290,48 @@ a { color: inherit;
     cursor: default;
 }
 
+.favourites-toggle:hover:not(:disabled) {
+    color: var(--text-color);
+    border-color: var(--text-color);
+}
+
 .favourites-list {
-    margin-top: 12px;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 12px);
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 6px;
+    padding: 10px;
+    border: 1px solid var(--tree-color);
+    border-radius: 8px;
+    background: var(--bg-color);
+    z-index: 10;
+    scrollbar-width: thin;
+    scrollbar-color: var(--tree-color) transparent;
+}
+
+.favourites-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.favourites-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.favourites-list::-webkit-scrollbar-thumb {
+    background-color: var(--tree-color);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.favourites-list::-webkit-scrollbar-thumb:hover {
+    background-color: var(--metadata-color);
 }
 
 .favourites-item {
@@ -292,17 +339,24 @@ a { color: inherit;
     background: transparent;
     color: var(--quote-color);
     border-radius: 6px;
-    padding: 8px 10px;
-    text-align: left;
-    cursor: pointer;
     display: flex;
-    gap: 10px;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.favourites-item:hover {
+    border-color: var(--quote-color);
+    color: var(--text-color);
 }
 
 .favourites-number {
     color: var(--metadata-color);
     font-size: 12px;
+    min-width: 26px;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .favourites-line {
@@ -317,6 +371,32 @@ a { color: inherit;
     display: flex;
     flex-direction: column;
     gap: 2px;
+}
+
+.favourites-select {
+    border: none;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+    flex: 1;
+}
+
+.favourites-remove {
+    border: none;
+    background: transparent;
+    color: var(--metadata-color);
+    cursor: pointer;
+    padding: 8px 10px;
+    font-size: 12px;
+}
+
+.favourites-remove:hover {
+    color: var(--text-color);
 }
 
 .favourites-empty {
