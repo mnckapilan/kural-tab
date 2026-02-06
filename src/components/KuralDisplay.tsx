@@ -95,7 +95,7 @@ const KuralDisplay: React.FC = () => {
 
       <KuralMeaning meaning={kural.mv} width={textWidth} />
 
-      <div className="favourites-section">
+      <div className={`favourites-section ${showFavourites ? "is-open" : ""}`}>
         <button
           type="button"
           className="favourites-toggle"
@@ -106,6 +106,16 @@ const KuralDisplay: React.FC = () => {
         </button>
         {showFavourites && (
           <div className="favourites-list">
+            <div className="favourites-header">
+              <span className="favourites-title">Favourites</span>
+              <button
+                type="button"
+                className="favourites-close"
+                onClick={() => setShowFavourites(false)}
+              >
+                Close
+              </button>
+            </div>
             {favouriteItems.length === 0 && (
               <div className="favourites-empty">No favourites yet.</div>
             )}

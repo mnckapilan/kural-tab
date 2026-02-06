@@ -44,19 +44,17 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadFavouriteKurals = async (): Promise<void> => {
+    const loadFavouriteKurals = (): void => {
       try {
-        if (
-          typeof window !== "undefined" &&
-          window.chrome &&
-          window.chrome.storage &&
-          window.chrome.storage.sync
-        ) {
-          const data = await window.chrome.storage.sync.get("favouriteKurals");
-          const stored = Array.isArray(data.favouriteKurals)
-            ? data.favouriteKurals
-            : [];
-          setFavouriteKurals(stored);
+        if (typeof window !== "undefined" && window.localStorage) {
+          const storedRaw = window.localStorage.getItem("favouriteKurals");
+          if (storedRaw) {
+            const parsed = JSON.parse(storedRaw);
+            const stored = Array.isArray(parsed)
+              ? parsed.filter((num) => typeof num === "number")
+              : [];
+            setFavouriteKurals(stored);
+          }
         }
       } catch (error: unknown) {
         console.error("Error retrieving favourite kurals from storage:", error);
@@ -137,17 +135,15 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
         : [...prev, kuralNumber];
       const sorted = next.slice().sort((a, b) => a - b);
 
-      if (
-        typeof window !== "undefined" &&
-        window.chrome &&
-        window.chrome.storage &&
-        window.chrome.storage.sync
-      ) {
-        window.chrome.storage.sync
-          .set({ favouriteKurals: sorted })
-          .catch((error: unknown) => {
-            console.error("Error saving favourite kurals:", error);
-          });
+      if (typeof window !== "undefined" && window.localStorage) {
+        try {
+          window.localStorage.setItem(
+            "favouriteKurals",
+            JSON.stringify(sorted)
+          );
+        } catch (error: unknown) {
+          console.error("Error saving favourite kurals:", error);
+        }
       }
 
       return sorted;

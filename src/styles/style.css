@@ -332,6 +332,38 @@ a { color: inherit;
     scrollbar-color: var(--tree-color) transparent;
 }
 
+.favourites-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--tree-color);
+}
+
+.favourites-title {
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--metadata-color);
+}
+
+.favourites-close {
+    border: 1px solid var(--tree-color);
+    background: transparent;
+    color: var(--metadata-color);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.favourites-close:hover {
+    color: var(--text-color);
+    border-color: var(--text-color);
+}
+
 .favourites-list::-webkit-scrollbar {
     width: 8px;
 }
@@ -424,27 +456,84 @@ a { color: inherit;
 
 
 @media (max-width: 600px) {
+    body {
+        align-items: flex-start;
+        height: auto;
+        min-height: 100vh;
+        padding: 24px 0;
+    }
+
     .quote-container {
-        width: 95%;
-        padding: 30px;
+        width: 100%;
+        padding: 22px;
+        box-sizing: border-box;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
     }
 
     .quote-text {
-        font-size: 20px;
+        font-size: 22px;
+    }
+
+    .quote-text > div {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: normal;
     }
 
     .quote-explanation, .quote-mv {
         font-size: 16px;
+        margin-bottom: 16px;
     }
 
     .quote-number {
-        font-size: 12px;
-        margin-bottom: 10px;
+        font-size: 16px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+        row-gap: 8px;
     }
 
     .quote-metadata {
         font-size: 12px;
         margin-bottom: 10px;
+    }
+
+    .refresh-button {
+        padding: 8px 14px;
+        font-size: 11px;
+    }
+
+    .star-button {
+        width: 32px;
+        height: 32px;
+    }
+
+    .favourites-toggle {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .favourites-list {
+        position: fixed;
+        inset: 0;
+        margin-top: 0;
+        max-height: none;
+        border-radius: 0;
+        padding: 20px;
+        gap: 12px;
+        z-index: 50;
+    }
+
+    .favourites-section {
+        margin-top: auto;
+        padding-top: 16px;
+    }
+
+    .favourites-line {
+        white-space: normal;
+        overflow-wrap: anywhere;
     }
 }
 

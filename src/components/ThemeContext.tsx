@@ -27,17 +27,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     document.body.classList.add("no-transition");
 
     // Get saved theme preference
-    const getSavedTheme = async (): Promise<void> => {
+    const getSavedTheme = (): void => {
       try {
-        if (
-          typeof window !== "undefined" &&
-          window.chrome &&
-          window.chrome.storage &&
-          window.chrome.storage.sync
-        ) {
-          const data = await window.chrome.storage.sync.get("theme");
-          const savedTheme = (data.theme as ThemeType) || THEME.DARK;
-          setTheme(savedTheme);
+        if (typeof window !== "undefined" && window.localStorage) {
+          const storedTheme = window.localStorage.getItem("theme");
+          if (storedTheme === THEME.LIGHT || storedTheme === THEME.DARK) {
+            setTheme(storedTheme);
+          }
         }
       } catch (error: unknown) {
         console.error("Error retrieving theme from storage:", error);
@@ -73,17 +69,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     setTheme(newTheme);
 
     // Save theme preference to storage
-    if (
-      typeof window !== "undefined" &&
-      window.chrome &&
-      window.chrome.storage &&
-      window.chrome.storage.sync
-    ) {
-      window.chrome.storage.sync
-        .set({ theme: newTheme })
-        .catch((error: unknown) => {
-          console.error("Error saving theme:", error);
-        });
+    if (typeof window !== "undefined" && window.localStorage) {
+      try {
+        window.localStorage.setItem("theme", newTheme);
+      } catch (error: unknown) {
+        console.error("Error saving theme:", error);
+      }
     }
   };
 
