@@ -9,9 +9,8 @@ import {
   Kural,
   KuralData,
   KuralMetadataResult,
-  MetadataSection,
-} from "../models";
-import { KuralService } from "../kuralService";
+} from "../types/models";
+import { KuralService } from "../services/kuralService";
 
 interface KuralContextType {
   kural: Kural | null;
@@ -36,9 +35,7 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
   const [kural, setKural] = useState<Kural | null>(null);
   const [metadata, setMetadata] = useState<KuralMetadataResult | null>(null);
   const [kuralData, setKuralData] = useState<KuralData | null>(null);
-  const [metadataData, setMetadataData] = useState<MetadataSection[] | null>(
-    null
-  );
+  const [metadataLookup, setMetadataLookup] = useState<Map<number, KuralMetadataResult> | null>(null);
   const [favouriteKurals, setFavouriteKurals] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,25 +69,19 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
       setError(null);
 
       let currentKuralData = kuralData;
-      let currentMetadataData = metadataData;
+      let currentMetadataLookup = metadataLookup;
 
-      if (!currentKuralData || !currentMetadataData) {
+      if (!currentKuralData || !currentMetadataLookup) {
         const fetched = await KuralService.fetchKuralData();
         currentKuralData = fetched.kuralData;
-        currentMetadataData = fetched.metadataData;
+        currentMetadataLookup = KuralService.buildMetadataLookup(fetched.metadataData[0]);
         setKuralData(currentKuralData);
-        setMetadataData(currentMetadataData);
+        setMetadataLookup(currentMetadataLookup);
       }
 
       const randomKural = KuralService.getRandomKural(currentKuralData);
-
-      const kuralMetadata = KuralService.findKuralMetadata(
-        currentMetadataData[0],
-        randomKural.Number
-      );
-
       setKural(randomKural);
-      setMetadata(kuralMetadata);
+      setMetadata(currentMetadataLookup.get(randomKural.Number) ?? null);
     } catch (err) {
       console.error("Error loading Thirukkural:", err);
       setError(
@@ -103,7 +94,6 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
     }
   };
 
-  // Load a kural when the component mounts
   useEffect(() => {
     fetchKural();
   }, []);
@@ -113,18 +103,13 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
   };
 
   const selectKuralByNumber = (kuralNumber: number): void => {
-    if (!kuralData || !metadataData) return;
+    if (!kuralData || !metadataLookup) return;
     const selected = kuralData.kural.find(
       (item) => item.Number === kuralNumber
     );
     if (!selected) return;
-
-    const selectedMetadata = KuralService.findKuralMetadata(
-      metadataData[0],
-      selected.Number
-    );
     setKural(selected);
-    setMetadata(selectedMetadata);
+    setMetadata(metadataLookup.get(kuralNumber) ?? null);
   };
 
   const isFavourite = (kuralNumber: number): boolean =>

@@ -1,16 +1,12 @@
 import React from "react";
-import { KuralMetadataResult } from "../models";
+import { KuralMetadataResult } from "../types/models";
 
 interface KuralMetadataProps {
   metadata: KuralMetadataResult | null;
 }
 
 const KuralMetadata: React.FC<KuralMetadataProps> = ({ metadata }) => {
-  // Add debugging to check if this component is being rendered
-  console.log("KuralMetadata rendering with:", metadata);
-
   if (!metadata) {
-    // Instead of returning null, render a placeholder
     return (
       <div className="quote-metadata">
         <div className="metadata-placeholder">Metadata unavailable</div>

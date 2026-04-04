@@ -6,7 +6,7 @@ import {
     MetadataSection,
     KuralMetadataResult,
     FILE_PATHS
-} from './models';
+} from '../types/models';
 
 /**
  * Custom error for Kural data operations
@@ -65,15 +65,12 @@ export class KuralService {
                 ? `Error fetching Kural data: ${error.message}`
                 : 'Unknown error fetching Kural data';
 
-            console.error(message, error);
             throw new KuralDataError(message, error);
         }
     }
 
     /**
      * Selects a random Kural from the data
-     * @param kuralData The full kural dataset
-     * @returns A randomly selected kural
      */
     public static getRandomKural(kuralData: KuralData): Kural {
         const randomIndex = Math.floor(Math.random() * kuralData.kural.length);
@@ -81,60 +78,42 @@ export class KuralService {
     }
 
     /**
-     * Find metadata for a specific Kural number
-     * @param metadata - The metadata to search in
-     * @param kuralNumber - The kural number to find
-     * @returns The metadata result or null if not found
+     * Builds a lookup Map from kural number → metadata result.
+     * Call this once after fetching data; use the map for O(1) lookups.
      */
-    public static findKuralMetadata(
-        metadata: MetadataSection,
-        kuralNumber: number
-    ): KuralMetadataResult | null {
-        if (!metadata?.section?.detail) {
-            console.error('Metadata section detail is missing or invalid:', metadata);
-            return null;
-        }
+    public static buildMetadataLookup(
+        metadata: MetadataSection
+    ): Map<number, KuralMetadataResult> {
+        const map = new Map<number, KuralMetadataResult>();
 
-        console.log(`Finding metadata for Kural number: ${kuralNumber}`);
+        if (!metadata?.section?.detail) return map;
 
-        // Iterate through each section (அறத்துப்பால், பொருட்பால், காமத்துப்பால்)
         for (const section of metadata.section.detail) {
-            if (!section.chapterGroup?.detail) {
-                console.log(`Section missing chapterGroup: ${section.name}`);
-                continue;
-            }
+            if (!section.chapterGroup?.detail) continue;
 
-            // Iterate through each chapter group (இயல்)
             for (const chapterGroup of section.chapterGroup.detail) {
-                if (!chapterGroup.chapters?.detail) {
-                    console.log(`ChapterGroup missing chapters: ${chapterGroup.name}`);
-                    continue;
-                }
+                if (!chapterGroup.chapters?.detail) continue;
 
-                // Iterate through each chapter (அதிகாரம்)
                 for (const chapter of chapterGroup.chapters.detail) {
-                    console.log(`Checking chapter: ${chapter.name} (${chapter.start}-${chapter.end})`);
+                    const result: KuralMetadataResult = {
+                        section: {
+                            name: section.translation,
+                            tamil: section.name,
+                        },
+                        chapter: {
+                            name: chapter.translation,
+                            tamil: chapter.name,
+                            number: chapter.number,
+                        },
+                    };
 
-                    if (kuralNumber >= chapter.start && kuralNumber <= chapter.end) {
-                        console.log(`Found match! Kural ${kuralNumber} is in chapter: ${chapter.name}`);
-
-                        return {
-                            section: {
-                                name: section.translation,
-                                tamil: section.name,
-                            },
-                            chapter: {
-                                name: chapter.translation,
-                                tamil: chapter.name,
-                                number: chapter.number,
-                            },
-                        };
+                    for (let n = chapter.start; n <= chapter.end; n++) {
+                        map.set(n, result);
                     }
                 }
             }
         }
 
-        console.error(`No metadata found for Kural number: ${kuralNumber}`);
-        return null;
+        return map;
     }
 }

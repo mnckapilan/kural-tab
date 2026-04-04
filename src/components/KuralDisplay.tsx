@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useKural } from "./KuralContext";
+import React, { useMemo, useState } from "react";
+import { useKural } from "../context/KuralContext";
 import KuralText from "./KuralText";
 import KuralMetadata from "./KuralMetadata";
 import KuralExplanation from "./KuralExplanation";
 import KuralMeaning from "./KuralMeaning";
+import KuralSkeleton from "./KuralSkeleton";
 import { useKuralLayout } from "../hooks/useKuralLayout";
 
 const KuralDisplay: React.FC = () => {
@@ -22,12 +23,6 @@ const KuralDisplay: React.FC = () => {
   const { textWidth, handleLayoutChange } = useKuralLayout();
   const [showFavourites, setShowFavourites] = useState(false);
 
-  // Add debugging logs
-  useEffect(() => {
-    console.log("Kural data:", kural);
-    console.log("Metadata:", metadata);
-  }, [kural, metadata]);
-
   const favouriteItems = useMemo(() => {
     if (!kuralData) return [];
     const map = new Map(kuralData.kural.map((item) => [item.Number, item]));
@@ -37,7 +32,7 @@ const KuralDisplay: React.FC = () => {
   }, [kuralData, favouriteKurals]);
 
   if (isLoading) {
-    return <div className="loading-kural">Loading Thirukkural...</div>;
+    return <KuralSkeleton />;
   }
 
   if (error || !kural) {
@@ -52,8 +47,12 @@ const KuralDisplay: React.FC = () => {
     );
   }
 
+  const containerStyle = textWidth > 0
+    ? ({ "--kural-text-width": `${textWidth}px` } as React.CSSProperties)
+    : undefined;
+
   return (
-    <div className="quote-container">
+    <div className="quote-container" style={containerStyle}>
       <div className="quote-number">
         <span>{kural.Number}</span>
         <button
@@ -91,9 +90,9 @@ const KuralDisplay: React.FC = () => {
 
       <KuralText kural={kural} onLayoutChanged={handleLayoutChange} />
 
-      <KuralExplanation explanation={kural.Translation} width={textWidth} />
+      <KuralExplanation explanation={kural.Translation} />
 
-      <KuralMeaning meaning={kural.mv} width={textWidth} />
+      <KuralMeaning meaning={kural.mv} />
 
       <div className="favourites-section">
         <button
