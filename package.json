@@ -1,6 +1,6 @@
 {
   "name": "kural-tab",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "New tab extension",
   "main": "index.js",
   "engines": {
