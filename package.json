@@ -1,12 +1,17 @@
 {
   "name": "kural-tab",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "New tab extension",
   "main": "index.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "playwright test",
+    "pretest": "npm run build",
     "build": "webpack --config webpack.prod.js",
-    "start": "webpack --watch --config webpack.dev.js"
+    "start": "webpack --watch --config webpack.dev.js",
+    "release": "npm run build && cd dist && zip -r ../kural-tab.zip . && cd .. && echo \"Release zip created: kural-tab.zip\""
   },
   "repository": {
     "type": "git",

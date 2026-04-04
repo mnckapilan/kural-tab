@@ -74,6 +74,11 @@ out/
 # Chrome extension specific
 *.crx
 *.pem
+kural-tab.zip
+
+# Playwright test artifacts
+test-results/
+playwright-report/
 
 # Temporary files
 *.tmp
