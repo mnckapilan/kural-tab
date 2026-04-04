@@ -11,6 +11,8 @@
     "pretest": "npm run build",
     "build": "webpack --config webpack.prod.js",
     "start": "webpack --watch --config webpack.dev.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
     "release": "npm run build && cd dist && zip -r ../kural-tab.zip . && cd .. && echo \"Release zip created: kural-tab.zip\""
   },
   "repository": {

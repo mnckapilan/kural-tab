@@ -48,8 +48,8 @@ export class KuralService {
                 throw new Error(`Failed to fetch metadata: ${metadataResponse.status}`);
             }
 
-            const kuralData: KuralData = await kuralResponse.json();
-            const metadataData: MetadataSection[] = await metadataResponse.json();
+            const kuralData = (await kuralResponse.json()) as unknown as KuralData;
+            const metadataData = (await metadataResponse.json()) as unknown as MetadataSection[];
 
             if (!kuralData?.kural?.length) {
                 throw new Error("Invalid or empty Kural data received");

@@ -3,14 +3,8 @@
   "name": "Kural Tab",
   "version": "1.0.3",
   "description": "Replace your new tab with daily Thirukkural couplets, offering timeless wisdom and reflection.",
-  "permissions": ["scripting", "storage"],
-  "action": {
-    "default_title": "Kural Tab"
-  },
+  "permissions": ["storage"],
   "chrome_url_overrides": {
     "newtab": "index.html"
-  },
-  "background": {
-    "service_worker": "background.js"
   }
 }

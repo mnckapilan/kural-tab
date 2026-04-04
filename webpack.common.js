@@ -3,8 +3,7 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 module.exports = {
   entry: {
-    background: "./src/background.ts",
-    content: "./src/index.tsx",
+    newtab: "./src/index.tsx",
   },
   output: {
     filename: "[name].js",
