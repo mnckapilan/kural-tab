@@ -1,12 +1,17 @@
 {
   "name": "kural-tab",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "New tab extension",
   "main": "index.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "playwright test",
+    "pretest": "npm run build",
     "build": "webpack --config webpack.prod.js",
-    "start": "webpack --watch --config webpack.dev.js"
+    "start": "webpack --watch --config webpack.dev.js",
+    "release": "npm run build && cd dist && zip -r ../kural-tab.zip . && cd .. && echo \"Release zip created: kural-tab.zip\""
   },
   "repository": {
     "type": "git",
@@ -24,7 +29,9 @@
     "@babel/preset-react": "^7.23.3",
     "@babel/preset-typescript": "^7.23.3",
     "@eslint/js": "^9.26.0",
+    "@playwright/test": "^1.59.1",
     "@types/chrome": "^0.0.258",
+    "@types/node": "^25.5.2",
     "@types/react": "^18.2.57",
     "@types/react-dom": "^18.2.19",
     "babel-loader": "^9.1.3",

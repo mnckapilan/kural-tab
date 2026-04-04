@@ -15,30 +15,56 @@ Kural Tab is a Chrome extension that replaces your new tab page with a random Th
 
 ## Development Setup
 
-To set up Kural Tab for local development:
+### Prerequisites
 
-1. **Clone the repository**:
+- [nvm](https://github.com/nvm-sh/nvm) — the project pins its Node version in `.nvmrc`
 
-   ```bash
-   git clone https://github.com/mnckapilan/kural-tab.git
-   ```
+### Getting started
 
-2. **Navigate to the project directory**:
+```bash
+git clone https://github.com/mnckapilan/kural-tab.git
+cd kural-tab
+nvm use          # switches to the pinned Node version (22.16.0)
+npm install
+```
 
-   ```bash
-   cd kural-tab
-   ```
+### Commands
 
-3. **Load the extension in Chrome**:
+| Command | What it does |
+|---------|-------------|
+| `npm start` | Starts a watch build (dev mode, source maps inline) — rebuild happens automatically on every save |
+| `npm run build` | One-off production build into `dist/` |
+| `npm test` | Builds then runs the full Playwright end-to-end test suite in a real Chrome window |
+| `npm run release` | Production build + zips `dist/` into `kural-tab.zip` ready for Chrome Web Store upload |
 
-   - Open Chrome and navigate to `chrome://extensions/`.
-   - Enable "Developer mode" using the toggle in the top right corner.
-   - Click "Load unpacked" and select the `kural-tab` directory.
+### Loading the extension in Chrome
 
-4. **Test the extension**:
+1. Run `npm start` (or `npm run build` for a one-off build) — this populates `dist/`.
+2. Open Chrome and go to `chrome://extensions/`.
+3. Enable **Developer mode** (toggle, top right).
+4. Click **Load unpacked** and select the `dist/` folder.
+5. Open a new tab to see the extension in action.
 
-   - Open a new tab to see the extension in action.
-   - Make any necessary code changes and refresh the extension by clicking the refresh icon on the extension card in `chrome://extensions/`.
+While `npm start` is running, after making code changes Chrome will pick up the rebuild automatically — click the refresh icon on the extension card in `chrome://extensions/` to reload it.
+
+### Running tests
+
+```bash
+npm test
+```
+
+This builds the extension first, then launches Playwright against a real Chrome window with the extension loaded. Tests cover rendering, the randomise button, favourites, theme toggle, and metadata links.
+
+### Releasing
+
+Releases are handled automatically by CI when a `v*.*.*` tag is pushed:
+
+```bash
+git tag v1.0.4
+git push origin v1.0.4
+```
+
+This triggers the GitHub Actions workflow which builds, zips, and uploads to the Chrome Web Store. To produce the zip locally without publishing, run `npm run release`.
 
 ## Contributing
 

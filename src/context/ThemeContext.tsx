@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { ThemeType, THEME } from "../models";
+import { ThemeType, THEME } from "../types/models";
 
 interface ThemeContextType {
   theme: ThemeType;
@@ -26,7 +26,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     // Add initial no-transition class to prevent flash
     document.body.classList.add("no-transition");
 
-    // Get saved theme preference
     const getSavedTheme = async (): Promise<void> => {
       try {
         if (
@@ -58,7 +57,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    // Apply theme class to body
     if (theme === THEME.LIGHT) {
       document.body.classList.add("light-mode");
       document.body.classList.remove("dark-mode");
@@ -72,7 +70,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     const newTheme = theme === THEME.DARK ? THEME.LIGHT : THEME.DARK;
     setTheme(newTheme);
 
-    // Save theme preference to storage
     if (
       typeof window !== "undefined" &&
       window.chrome &&

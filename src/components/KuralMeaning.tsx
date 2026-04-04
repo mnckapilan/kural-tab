@@ -1,24 +1,11 @@
-import React, { forwardRef } from "react";
+import React from "react";
 
 interface KuralMeaningProps {
   meaning: string;
-  width?: number;
 }
 
-const KuralMeaning = forwardRef<HTMLDivElement, KuralMeaningProps>(
-  ({ meaning, width }, ref) => {
-    return (
-      <div
-        className="quote-mv"
-        ref={ref}
-        style={{ width: width ? `${width}px` : "auto" }}
-      >
-        {meaning}
-      </div>
-    );
-  }
+const KuralMeaning: React.FC<KuralMeaningProps> = ({ meaning }) => (
+  <div className="quote-mv">{meaning}</div>
 );
-
-KuralMeaning.displayName = "KuralMeaning";
 
 export default KuralMeaning;

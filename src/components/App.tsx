@@ -1,9 +1,10 @@
 /// <reference types="chrome"/>
 import React from "react";
-import { ThemeProvider } from "./ThemeContext";
-import { KuralProvider } from "./KuralContext";
+import { ThemeProvider } from "../context/ThemeContext";
+import { KuralProvider } from "../context/KuralContext";
 import ThemeToggle from "./ThemeToggle";
 import KuralDisplay from "./KuralDisplay";
+import ErrorBoundary from "./ErrorBoundary";
 
 declare const __DEV__: boolean;
 
@@ -15,11 +16,13 @@ declare global {
 
 const App: React.FC = () => {
   return (
-    <ThemeProvider>
-      <KuralProvider>
-        <AppContent />
-      </KuralProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <KuralProvider>
+          <AppContent />
+        </KuralProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 };
 
