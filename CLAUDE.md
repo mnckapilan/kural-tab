@@ -16,8 +16,8 @@ npm run typecheck  # tsc --noEmit (webpack strips types via Babel and never type
 Node version is pinned to 22.16.0 via `.nvmrc`; use `nvm use` before running commands.
 
 `eslint.config.mjs` is a flat config using `@eslint/js` recommended, `typescript-eslint`
-`recommendedTypeChecked`, and `eslint-plugin-react`. There is **no format script** — Prettier is in
-`devDependencies` but isn't wired up.
+`recommendedTypeChecked`, and `eslint-plugin-react`. There is **no formatter** — Prettier was removed
+because it was never wired up (no script, no config file, no ESLint integration).
 
 Because Babel only strips types, **`npm run build` succeeds on code with type errors**. Run
 `npm run typecheck` explicitly after changing types.
@@ -42,7 +42,6 @@ Webpack 5 + Babel + TypeScript.
   it is the new tab page, not a content script.
 - `background` → `src/background.ts` → `dist/background.js` — service worker; on icon click opens a new
   tab and injects `content.js` into it.
-- `src/content.ts` is **dead code** — nothing imports it and it isn't a webpack entry. Ignore it.
 - `static/manifest.json` — Manifest V3; declares `chrome_url_overrides.newtab`, storage + scripting permissions.
 
 **State management via React Context:**
