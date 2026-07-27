@@ -8,6 +8,9 @@ on:
       - opened
       - synchronize
 
+permissions:
+  contents: read
+
 jobs:
   build-extension:
     uses: ./.github/workflows/build.yml
@@ -29,10 +32,10 @@ jobs:
       pull-requests: write  # Allows updating PR comments
     steps:
       - name: Post PR Comment (Auto-Replace Old)
-        uses: thollander/actions-comment-pull-request@v2
+        uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          comment_tag: build-preview 
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          comment-tag: build-preview
           mode: upsert
           message: |
             🚀 **Preview Build Available for Testing**  
