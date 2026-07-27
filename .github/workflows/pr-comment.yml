@@ -8,12 +8,25 @@ on:
       - opened
       - synchronize
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-extension:
     uses: ./.github/workflows/build.yml
     with:
       artifact_name: kural-tab-${{ github.event.pull_request.number }}
       retention_days: 3
+
+  checks:
+    needs: build-extension
+    uses: ./.github/workflows/checks.yml
+    with:
+      artifact_name: kural-tab-${{ github.event.pull_request.number }}
 
   comment-pr:
     name: Comment on PR
@@ -23,10 +36,10 @@ jobs:
       pull-requests: write  # Allows updating PR comments
     steps:
       - name: Post PR Comment (Auto-Replace Old)
-        uses: thollander/actions-comment-pull-request@v2
+        uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          comment_tag: build-preview 
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          comment-tag: build-preview
           mode: upsert
           message: |
             🚀 **Preview Build Available for Testing**  
