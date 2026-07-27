@@ -57,7 +57,8 @@ This builds the extension first, then launches Playwright against a real Chrome 
 
 ### Releasing
 
-Releases are handled automatically by CI when a `v*.*.*` tag is pushed:
+`package.json`'s `version` is the single source of truth (the build stamps it into
+`dist/manifest.json` automatically). Bump it there, then tag and push to release:
 
 ```bash
 git tag v1.0.4

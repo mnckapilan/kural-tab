@@ -1,5 +1,6 @@
 const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const { version } = require("./package.json");
 
 module.exports = {
   entry: {
@@ -40,7 +41,24 @@ module.exports = {
   },
   plugins: [
     new CopyWebpackPlugin({
-      patterns: [{ from: "static" }, { from: "data", to: "data" }],
+      patterns: [
+        {
+          from: "static",
+          // static/manifest.json's own "version" field is a placeholder and is
+          // never the source of truth — package.json is. Stamp it in here so
+          // dist/manifest.json (and thus the Chrome Web Store upload) always
+          // matches package.json, and the two can never drift.
+          transform: (content, absoluteFrom) => {
+            if (path.basename(absoluteFrom) !== "manifest.json") {
+              return content;
+            }
+            const manifest = JSON.parse(content.toString());
+            manifest.version = version;
+            return JSON.stringify(manifest, null, 2);
+          },
+        },
+        { from: "data", to: "data" },
+      ],
     }),
   ],
 };

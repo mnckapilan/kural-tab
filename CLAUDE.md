@@ -139,5 +139,8 @@ dependency on every new tab).
   (`node-version: "22"`) rather than using `.nvmrc`, because it checks out no source.
 - `pr-comment.yml` — Posts a PR comment linking the build artifact for manual testing.
 
-**Releasing:** the version lives in **two** places that must be kept in sync — `package.json` and
-`static/manifest.json` (both currently 1.0.4). Publishing is tag-driven: `git tag v1.0.4 && git push origin v1.0.4`.
+**Releasing:** `package.json`'s `version` is the single source of truth (currently 1.0.4).
+`static/manifest.json` keeps a `0.0.0` placeholder — `webpack.common.js`'s CopyWebpackPlugin `transform`
+overwrites it with `package.json`'s version whenever `static/` is copied to `dist/`, so `dist/manifest.json`
+(what actually ships) always matches `package.json` and the two can't drift. Only bump `package.json` before
+tagging. Publishing is tag-driven: `git tag v1.0.4 && git push origin v1.0.4`.
