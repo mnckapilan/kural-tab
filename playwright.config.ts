@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: "./tests",
   timeout: 30000,
   retries: 1,
-  reporter: "list",
+  reporter: [["list"], ["html", { open: "never" }]],
   use: {
     // Extensions require a non-headless context
     headless: false,
