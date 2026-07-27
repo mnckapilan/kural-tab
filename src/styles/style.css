@@ -1,3 +1,25 @@
+/*
+ * Self-hosted Noto Sans Tamil (weight 300 — the only weight used anywhere in
+ * the app; body sets font-weight: 300 and nothing overrides it). Subsetted
+ * to the Tamil unicode range only, since .quote-text (the sole consumer of
+ * this font-family) renders Tamil couplets; the handful of ASCII punctuation
+ * characters they contain (space, ".", "?") fall back to Arial via the
+ * font-family list, which is visually indistinguishable for those glyphs.
+ * File lives at static/fonts/, copied verbatim into dist/fonts/ by
+ * CopyWebpackPlugin (see webpack.common.js). This stylesheet is injected as
+ * a runtime <style> tag by style-loader, so the url() below resolves
+ * relative to dist/index.html, not to this file — do not turn it into a
+ * relative "../" path. See CLAUDE.md "Styling" section and issue #18.
+ */
+@font-face {
+    font-family: "Noto Sans Tamil";
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url("fonts/NotoSansTamil-Light.woff2") format("woff2");
+    unicode-range: U+0964-0965, U+0B82-0BFA, U+200C-200D, U+20B9, U+25CC;
+}
+
 :root {
     --bg-color: #1a1a1a;
     --text-color: #f2f2f2;

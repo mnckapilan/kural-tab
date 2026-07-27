@@ -35,7 +35,23 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: ["style-loader", "css-loader"],
+        use: [
+          "style-loader",
+          {
+            // Disable css-loader's url() resolution: src/styles/style.css is
+            // injected at runtime as a <style> tag by style-loader, so any
+            // url() paths (e.g. the @font-face src for the self-hosted Noto
+            // Sans Tamil woff2) must resolve relative to the PAGE
+            // (dist/index.html), not to this source file's location. With
+            // url resolution on, css-loader would try to treat the font path
+            // as a webpack module relative to src/styles/ and fail to find
+            // it. Leaving url() untouched keeps the literal "fonts/..." path
+            // in the injected CSS, which correctly resolves against
+            // dist/fonts/ (copied from static/fonts/ by CopyWebpackPlugin).
+            loader: "css-loader",
+            options: { url: false },
+          },
+        ],
       },
     ],
   },

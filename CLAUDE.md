@@ -109,12 +109,20 @@ background/text colour (light/dark CSS vars) and basic centering layout — deli
 duplicate stylesheet. If you change `body`, `:root`, `.light-mode` colour vars, or `.no-transition` in
 `src/styles/style.css`, check whether the inline block in `static/index.html` needs the same update.
 
-The Noto Sans Tamil font is loaded from Google Fonts via `<link>` in `static/index.html` (a network
-dependency on every new tab).
+Noto Sans Tamil is self-hosted, not loaded from Google Fonts: `static/fonts/NotoSansTamil-Light.woff2`
+(weight 300 — the only weight used anywhere in the app; `body` sets `font-weight: 300` and nothing
+overrides it) is subsetted to the Tamil unicode range and declared via `@font-face` at the top of
+`src/styles/style.css`. `static/fonts/LICENSE.txt` carries the required SIL OFL 1.1 text. The `@font-face`
+`src: url(...)` uses a bare `fonts/...` path because `src/styles/style.css` is injected as a runtime
+`<style>` tag by style-loader, so it resolves relative to `dist/index.html`, not to the source file —
+see the css-loader `url: false` option in `webpack.common.js`, which is required for this to work
+(css-loader would otherwise try to resolve the font path as a webpack module relative to `src/styles/`
+and fail).
 
 **Build config:**
-- `webpack.common.js` — Both entries, Babel loader for TS/TSX, style-loader + css-loader for CSS, and
-  CopyWebpackPlugin bundling `static/` → `dist/` and `data/` → `dist/data/`. `output.clean` wipes `dist/`.
+- `webpack.common.js` — Both entries, Babel loader for TS/TSX, style-loader + css-loader (with
+  `url: false`, see above) for CSS, and CopyWebpackPlugin bundling `static/` → `dist/` and
+  `data/` → `dist/data/`. `output.clean` wipes `dist/`.
 - `webpack.dev.js` / `webpack.prod.js` — Merge with common; both define `__DEV__` via DefinePlugin
   (true in dev, false in prod). Dev uses inline source maps.
 - `tsconfig.json` — `strict: true`, `jsx: "react"`. Note it still sets `outDir`/`rootDir` even though tsc
