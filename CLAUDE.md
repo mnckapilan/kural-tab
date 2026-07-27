@@ -9,17 +9,18 @@ npm start          # Watch build (dev mode, inline source maps)
 npm run build      # Production build → dist/
 npm test           # Build (via pretest) + run Playwright e2e tests (real Chrome, non-headless)
 npm run release    # Production build + zip dist/ → kural-tab.zip for Web Store upload
-npx tsc --noEmit   # Type check only (webpack strips types via Babel and never type checks)
+npm run lint       # eslint src
+npm run typecheck  # tsc --noEmit (webpack strips types via Babel and never type checks)
 ```
 
 Node version is pinned to 22.16.0 via `.nvmrc`; use `nvm use` before running commands.
 
-There is **no lint or format script**. ESLint/Prettier are in `devDependencies`, but no `eslint.config.*`
-exists on `main` — the config lives on the unmerged `origin/claude-ts-audit` branch, so `npx eslint`
-fails out of the box. Don't tell the user to "run the linter" without adding the config first.
+`eslint.config.mjs` is a flat config using `@eslint/js` recommended, `typescript-eslint`
+`recommendedTypeChecked`, and `eslint-plugin-react`. There is **no format script** — Prettier is in
+`devDependencies` but isn't wired up.
 
 Because Babel only strips types, **`npm run build` succeeds on code with type errors**. Run
-`npx tsc --noEmit` explicitly after changing types.
+`npm run typecheck` explicitly after changing types.
 
 To load the extension locally: go to `chrome://extensions/`, enable Developer Mode, click "Load unpacked",
 select the `dist/` directory.
