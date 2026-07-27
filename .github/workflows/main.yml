@@ -49,15 +49,6 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
-    env:
-      EXTENSION_ID: njidhifbpgbfadoffhibkjnnkfhcglpc
-    # Requires the "chrome-web-store" environment to be configured in repo settings
-    # with a required reviewer, since --auto-publish below removes the previous
-    # manual dashboard step that acted as the human gate.
-    environment:
-      name: chrome-web-store
-      url: https://chromewebstore.google.com/detail/njidhifbpgbfadoffhibkjnnkfhcglpc
-
     steps:
       # No checkout in this job (only the downloaded artifact is needed), so
       # setup-node can't use node-version-file: ".nvmrc". Pinned inline instead.
@@ -75,18 +66,23 @@ jobs:
       - name: Zip extension for Chrome Web Store
         run: cd dist && zip -r ../kural-tab.zip .
 
+      # Pinned: v4 dropped the --client-id/--client-secret/--refresh-token flags
+      # and added a required PUBLISHER_ID, so an unpinned install silently broke
+      # this step the day v4.0.0 shipped.
       - name: Install Webstore CLI
-        run: npm install -g chrome-webstore-upload-cli
+        run: npm install -g chrome-webstore-upload-cli@4.0.1
 
-      - name: Upload to Chrome Web Store
-        run: |
-          chrome-webstore-upload upload \
-            --source kural-tab.zip \
-            --extension-id ${{ env.EXTENSION_ID }} \
-            --client-id ${{ secrets.CI_GOOGLE_CLIENT_ID }} \
-            --client-secret ${{ secrets.CI_GOOGLE_CLIENT_SECRET }} \
-            --refresh-token ${{ secrets.CI_GOOGLE_REFRESH_TOKEN }} \
-            --auto-publish
+      # The bare "upload" command uploads a draft only. Omitting the command
+      # would upload *and* publish, i.e. submit for Google's review — we submit
+      # from the Developer Dashboard instead, so the draft is the handoff point.
+      - name: Upload draft to Chrome Web Store
+        env:
+          EXTENSION_ID: njidhifbpgbfadoffhibkjnnkfhcglpc
+          PUBLISHER_ID: ${{ secrets.CI_GOOGLE_PUBLISHER_ID }}
+          CLIENT_ID: ${{ secrets.CI_GOOGLE_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CI_GOOGLE_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CI_GOOGLE_REFRESH_TOKEN }}
+        run: chrome-webstore-upload upload --source kural-tab.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
