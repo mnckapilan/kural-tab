@@ -108,32 +108,6 @@ export const THEME = {
 export type ThemeType = typeof THEME[keyof typeof THEME];
 
 /**
- * CSS class constants
- */
-export const CSS_CLASSES = {
-    LIGHT_MODE: "light-mode",
-    DARK_MODE: "dark-mode",
-    NO_TRANSITION: "no-transition"
-} as const;
-
-/**
- * Element ID constants
- */
-export const ELEMENT_IDS = {
-    KURAL: "kural",
-    EXPLANATION: "explanation",
-    MV: "mv",
-    NUMBER: "number",
-    METADATA: "metadata",
-    MODE_SWITCH: "mode-switch"
-} as const;
-
-/**
- * Element ID type derived from constants
- */
-export type ElementId = typeof ELEMENT_IDS[keyof typeof ELEMENT_IDS];
-
-/**
  * File path constants
  */
 export const FILE_PATHS = {

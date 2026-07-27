@@ -56,8 +56,8 @@ Both contexts feature-detect `window.chrome.storage.sync` before touching it, so
 opened outside an extension context.
 
 **Data layer:**
-- `src/types/models.ts` — Central module for all interfaces plus the `THEME`, `CSS_CLASSES`,
-  `ELEMENT_IDS`, and `FILE_PATHS` constants. Prefer these constants over string literals.
+- `src/types/models.ts` — Central module for all interfaces plus the `THEME` and `FILE_PATHS`
+  constants. Prefer these constants over string literals.
 - `src/services/kuralService.ts` — Static-method class. Fetches both JSON files in parallel, validates them,
   and throws `KuralDataError` on failure. `buildMetadataLookup()` flattens the section → chapterGroup →
   chapter hierarchy into a `Map<kuralNumber, KuralMetadataResult>` by expanding each chapter's
