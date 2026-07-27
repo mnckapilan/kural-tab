@@ -44,6 +44,8 @@ jobs:
     needs: [build-extension, checks, verify-version]
     # Only publish to the Chrome Web Store on version tags
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
     env:
       EXTENSION_ID: njidhifbpgbfadoffhibkjnnkfhcglpc
     # Requires the "chrome-web-store" environment to be configured in repo settings
@@ -82,3 +84,9 @@ jobs:
             --client-secret ${{ secrets.CI_GOOGLE_CLIENT_SECRET }} \
             --refresh-token ${{ secrets.CI_GOOGLE_REFRESH_TOKEN }} \
             --auto-publish
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        with:
+          files: kural-tab.zip
+          generate_release_notes: true
