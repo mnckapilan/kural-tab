@@ -7,7 +7,45 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <!--
+      Critical CSS, inlined so the pre-React paint (before content.js loads and
+      style-loader injects src/styles/style.css) isn't a flash of unstyled
+      content. This must stay a MINIMAL subset — just enough to paint the body
+      background/colour and centre the (empty) #root — not a duplicate
+      stylesheet. See CLAUDE.md "Styling" section. Full component styling
+      lives solely in src/styles/style.css.
+    -->
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --text-color: #f2f2f2;
+        }
+
+        .light-mode {
+            --bg-color: #d4d4d4;
+            --text-color: #1a1a1a;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            font-weight: 300;
+            font-size: 18px;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        body.no-transition,
+        body.no-transition * {
+            transition: none !important;
+        }
+    </style>
 </head>
 <body class="dark-mode">
     <div id="root"></div>

@@ -98,14 +98,16 @@ kural change and reports the max width up through `useKuralLayout` (`src/hooks/u
 which the stylesheet uses to align the surrounding blocks to the couplet. Changing the `.quote-text`
 markup or its `div > div` structure will break this measurement.
 
-**Styling — two stylesheets are live, and this is a trap:**
-- `static/style.css` — copied to `dist/style.css`, loaded via `<link>` in `index.html`.
-- `src/styles/style.css` — imported by `index.tsx`, injected as a `<style>` tag at runtime by `style-loader`.
+**Styling — single source of truth, plus a small inlined critical-CSS block:**
+`src/styles/style.css` is the ONLY stylesheet — imported by `index.tsx`, injected as a `<style>` tag at
+runtime by `style-loader`. **Edit `src/styles/style.css`.** There used to be a second, hand-maintained
+`static/style.css` that silently drifted out of sync (see #19); it has been deleted.
 
-`static/style.css` (255 lines) is a **stale subset** of `src/styles/style.css` (544 lines); the latter is
-the real stylesheet and wins at runtime because style-loader injects later. Anything favourites-, skeleton-,
-error-, or dev-indicator-related exists only in `src/styles/style.css`. **Edit `src/styles/style.css`.**
-`static/style.css` mainly serves to style the pre-React paint.
+To avoid a flash of unstyled content before `content.js` loads and style-loader injects the real
+stylesheet, `static/index.html` has a small inline `<style>` block in its `<head>` with just the body
+background/text colour (light/dark CSS vars) and basic centering layout — deliberately minimal, not a
+duplicate stylesheet. If you change `body`, `:root`, `.light-mode` colour vars, or `.no-transition` in
+`src/styles/style.css`, check whether the inline block in `static/index.html` needs the same update.
 
 The Noto Sans Tamil font is loaded from Google Fonts via `<link>` in `static/index.html` (a network
 dependency on every new tab).
