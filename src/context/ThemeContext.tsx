@@ -53,7 +53,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       }
     };
 
-    getSavedTheme();
+    void getSavedTheme();
   }, []);
 
   useEffect(() => {

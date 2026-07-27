@@ -60,7 +60,7 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
       }
     };
 
-    loadFavouriteKurals();
+    void loadFavouriteKurals();
   }, []);
 
   const fetchKural = async (): Promise<void> => {
@@ -95,11 +95,11 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    fetchKural();
+    void fetchKural();
   }, []);
 
   const refreshKural = (): void => {
-    fetchKural();
+    void fetchKural();
   };
 
   const selectKuralByNumber = (kuralNumber: number): void => {
