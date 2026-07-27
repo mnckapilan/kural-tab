@@ -151,12 +151,17 @@ and fail).
 - `main.yml` — Runs on pushes to `main` and `v*.*.*` tags. Calls `build.yml` then `checks.yml`. A
   `verify-version` job (tag pushes only) fails the run if the pushed tag doesn't match `v<package.json
   version>`. `upload-extension` needs all three of `build-extension`, `checks`, and `verify-version`, and
-  is further gated on `startsWith(github.ref, 'refs/tags/v')`; it zips `dist/` and uploads to the Chrome
-  Web Store via `chrome-webstore-upload-cli` with `--auto-publish`, gated behind the `chrome-web-store`
-  GitHub Environment (configured with a required reviewer, since `--auto-publish` removes the manual
-  dashboard step that used to act as the human gate). On a successful store upload it cuts a GitHub
-  Release with `kural-tab.zip` attached via the SHA-pinned `softprops/action-gh-release`. Secrets:
-  `CI_GOOGLE_CLIENT_ID`, `CI_GOOGLE_CLIENT_SECRET`, `CI_GOOGLE_REFRESH_TOKEN`; extension ID
+  is further gated on `startsWith(github.ref, 'refs/tags/v')`; it zips `dist/` and runs
+  `chrome-webstore-upload-cli` (pinned to `@4.0.1`: v4.0.0 removed the `--client-id`/`--client-secret`/
+  `--refresh-token` flags in favour of env vars and added a required publisher ID, so an unpinned install
+  broke this step silently) with the bare `upload` command, which uploads a **draft only**. In Web Store
+  terms "publish" means submitting for Google's review, so the draft is the intentional handoff point — a
+  human submits it for review from the Chrome Web Store Developer Dashboard. Credentials are passed as
+  environment variables: `CLIENT_ID`, `CLIENT_SECRET`, `REFRESH_TOKEN`, `PUBLISHER_ID`, `EXTENSION_ID`.
+  On a successful upload it cuts a GitHub Release with `kural-tab.zip` attached via the SHA-pinned
+  `softprops/action-gh-release`. Secrets: `CI_GOOGLE_CLIENT_ID`, `CI_GOOGLE_CLIENT_SECRET`,
+  `CI_GOOGLE_REFRESH_TOKEN`, `CI_GOOGLE_PUBLISHER_ID` (the last must be created in repo settings — found
+  on the Developer Dashboard Settings page — or the step fails); extension ID
   `njidhifbpgbfadoffhibkjnnkfhcglpc`. The `upload-extension` job pins Node inline (`node-version: "22"`)
   rather than using `.nvmrc`, because it checks out no source.
 - `pr-comment.yml` — Also calls `build.yml` then `checks.yml`, then posts a PR comment linking the build
@@ -174,5 +179,5 @@ and fail).
 overwrites it with `package.json`'s version whenever `static/` is copied to `dist/`, so `dist/manifest.json`
 (what actually ships) always matches `package.json` and the two can't drift. Only bump `package.json` before
 tagging. Publishing is tag-driven: `git tag v1.0.4 && git push origin v1.0.4`; `verify-version` fails the
-run if the tag and `package.json` disagree, and the actual Web Store upload additionally waits on approval
-of the `chrome-web-store` environment.
+run if the tag and `package.json` disagree. The Web Store upload only produces a draft; submitting it for
+Google's review from the Developer Dashboard is a manual step and the intentional release gate.
