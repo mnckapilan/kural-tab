@@ -141,17 +141,38 @@ and fail).
 
 **CI/CD (`.github/workflows/`):**
 - `build.yml` — Reusable workflow (`workflow_call`, takes `artifact_name` + `retention_days`):
-  checkout → Node from `.nvmrc` → `npm ci` → `npm run build` → upload `dist/` artifact. **CI never runs
-  the tests** — Playwright is local-only.
-- `main.yml` — Runs on pushes to `main` and `v*.*.*` tags. Always builds; the `upload-extension` job is
-  gated on `startsWith(github.ref, 'refs/tags/v')` and zips + uploads to the Chrome Web Store via
-  `chrome-webstore-upload-cli`. Secrets: `CI_GOOGLE_CLIENT_ID`, `CI_GOOGLE_CLIENT_SECRET`,
-  `CI_GOOGLE_REFRESH_TOKEN`; extension ID `njidhifbpgbfadoffhibkjnnkfhcglpc`. This job pins Node inline
-  (`node-version: "22"`) rather than using `.nvmrc`, because it checks out no source.
-- `pr-comment.yml` — Posts a PR comment linking the build artifact for manual testing.
+  checkout → Node from `.nvmrc` → `npm ci` → `npm run build` → upload `dist/` artifact.
+- `checks.yml` — Reusable workflow (`workflow_call`, takes `artifact_name`): a `static` job runs `lint`
+  and `typecheck` in a matrix, and an `e2e` job downloads the already-built `dist/` artifact (rather than
+  rebuilding) and runs Playwright against it via `xvfb-run -a npx playwright test`, so CI tests the exact
+  bytes that get shipped. `xvfb-run` provides a virtual display, since extensions require headed Chrome
+  and GitHub's Linux runners have no display server. On failure it uploads `playwright-report/` as an
+  artifact (see the `html` reporter in `playwright.config.ts`).
+- `main.yml` — Runs on pushes to `main` and `v*.*.*` tags. Calls `build.yml` then `checks.yml`. A
+  `verify-version` job (tag pushes only) fails the run if the pushed tag doesn't match `v<package.json
+  version>`. `upload-extension` needs all three of `build-extension`, `checks`, and `verify-version`, and
+  is further gated on `startsWith(github.ref, 'refs/tags/v')`; it zips `dist/` and uploads to the Chrome
+  Web Store via `chrome-webstore-upload-cli` with `--auto-publish`, gated behind the `chrome-web-store`
+  GitHub Environment (configured with a required reviewer, since `--auto-publish` removes the manual
+  dashboard step that used to act as the human gate). On a successful store upload it cuts a GitHub
+  Release with `kural-tab.zip` attached via the SHA-pinned `softprops/action-gh-release`. Secrets:
+  `CI_GOOGLE_CLIENT_ID`, `CI_GOOGLE_CLIENT_SECRET`, `CI_GOOGLE_REFRESH_TOKEN`; extension ID
+  `njidhifbpgbfadoffhibkjnnkfhcglpc`. The `upload-extension` job pins Node inline (`node-version: "22"`)
+  rather than using `.nvmrc`, because it checks out no source.
+- `pr-comment.yml` — Also calls `build.yml` then `checks.yml`, then posts a PR comment linking the build
+  artifact for manual testing via the SHA-pinned `thollander/actions-comment-pull-request`. Runs under a
+  `${{ github.workflow }}-${{ github.ref }}` concurrency group with `cancel-in-progress: true`, so pushing
+  new commits to a PR cancels the previous run's build/checks.
+- All four workflows set top-level `permissions: contents: read`; jobs that need more (`upload-extension`
+  needs `contents: write` for the release, `comment-pr` needs `pull-requests: write`) grant it locally.
+  Third-party actions (`thollander/actions-comment-pull-request`, `softprops/action-gh-release`) are
+  pinned to commit SHAs with a trailing `# vX.Y.Z` comment; Dependabot (`.github/dependabot.yml`) keeps
+  those pins current.
 
 **Releasing:** `package.json`'s `version` is the single source of truth (currently 1.0.4).
 `static/manifest.json` keeps a `0.0.0` placeholder — `webpack.common.js`'s CopyWebpackPlugin `transform`
 overwrites it with `package.json`'s version whenever `static/` is copied to `dist/`, so `dist/manifest.json`
 (what actually ships) always matches `package.json` and the two can't drift. Only bump `package.json` before
-tagging. Publishing is tag-driven: `git tag v1.0.4 && git push origin v1.0.4`.
+tagging. Publishing is tag-driven: `git tag v1.0.4 && git push origin v1.0.4`; `verify-version` fails the
+run if the tag and `package.json` disagree, and the actual Web Store upload additionally waits on approval
+of the `chrome-web-store` environment.
