@@ -46,8 +46,16 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     env:
       EXTENSION_ID: njidhifbpgbfadoffhibkjnnkfhcglpc
+    # Requires the "chrome-web-store" environment to be configured in repo settings
+    # with a required reviewer, since --auto-publish below removes the previous
+    # manual dashboard step that acted as the human gate.
+    environment:
+      name: chrome-web-store
+      url: https://chromewebstore.google.com/detail/njidhifbpgbfadoffhibkjnnkfhcglpc
 
     steps:
+      # No checkout in this job (only the downloaded artifact is needed), so
+      # setup-node can't use node-version-file: ".nvmrc". Pinned inline instead.
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -72,4 +80,5 @@ jobs:
             --extension-id ${{ env.EXTENSION_ID }} \
             --client-id ${{ secrets.CI_GOOGLE_CLIENT_ID }} \
             --client-secret ${{ secrets.CI_GOOGLE_CLIENT_SECRET }} \
-            --refresh-token ${{ secrets.CI_GOOGLE_REFRESH_TOKEN }}
+            --refresh-token ${{ secrets.CI_GOOGLE_REFRESH_TOKEN }} \
+            --auto-publish
