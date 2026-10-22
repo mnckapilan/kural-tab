@@ -55,7 +55,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.artifact_name }}
-          path: dist/
+          path: .output/chrome-mv3/
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium

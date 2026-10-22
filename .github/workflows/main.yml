@@ -66,10 +66,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: kural-tab-${{ github.sha }}
-          path: dist/
+          path: .output/chrome-mv3/
 
       - name: Zip extension for Chrome Web Store
-        run: cd dist && zip -r ../kural-tab.zip .
+        run: cd .output/chrome-mv3 && zip -r ../../kural-tab.zip .
 
       # chrome-webstore-upload-cli is pinned to an exact version (no caret) in
       # devDependencies: v4 dropped the --client-id/--client-secret/--refresh-token

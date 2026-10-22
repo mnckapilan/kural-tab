@@ -43,5 +43,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact_name }}
-          path: dist/
+          path: .output/chrome-mv3/
           retention-days: ${{ inputs.retention_days }}
