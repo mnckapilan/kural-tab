@@ -6,8 +6,6 @@ import ThemeToggle from "./ThemeToggle";
 import KuralDisplay from "./KuralDisplay";
 import ErrorBoundary from "./ErrorBoundary";
 
-declare const __DEV__: boolean;
-
 declare global {
   interface Window {
     chrome: typeof chrome;
@@ -31,7 +29,7 @@ const AppContent: React.FC = () => {
     <div className="app">
       <ThemeToggle />
       <KuralDisplay />
-      {__DEV__ && <div className="dev-indicator">DEV BUILD</div>}
+      {import.meta.env.DEV && <div className="dev-indicator">DEV BUILD</div>}
     </div>
   );
 };

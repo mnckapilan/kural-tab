@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <title>New Tab</title>
     <!--
-      Critical CSS, inlined so the pre-React paint (before content.js loads and
-      style-loader injects src/styles/style.css) isn't a flash of unstyled
+      Critical CSS, inlined so the pre-React paint (before the bundled script loads and
+      the app's src/styles/style.css is applied) isn't a flash of unstyled
       content. This must stay a MINIMAL subset — just enough to paint the body
       background/colour and centre the (empty) #root — not a duplicate
       stylesheet. See CLAUDE.md "Styling" section. Full component styling
@@ -46,6 +46,6 @@
 </head>
 <body class="dark-mode">
     <div id="root"></div>
-    <script src="content.js"></script>
+    <script type="module" src="./main.tsx"></script>
 </body>
 </html>

@@ -5,18 +5,18 @@
  * this font-family) renders Tamil couplets; the handful of ASCII punctuation
  * characters they contain (space, ".", "?") fall back to Arial via the
  * font-family list, which is visually indistinguishable for those glyphs.
- * File lives at static/fonts/, copied verbatim into dist/fonts/ by
- * CopyWebpackPlugin (see webpack.common.js). This stylesheet is injected as
- * a runtime <style> tag by style-loader, so the url() below resolves
- * relative to dist/index.html, not to this file — do not turn it into a
- * relative "../" path. See CLAUDE.md "Styling" section and issue #18.
+ * File lives at public/fonts/, which WXT/Vite copies verbatim to the root of
+ * the build output (fonts/ next to newtab.html). The url() below is an
+ * absolute public path ("/fonts/..."): Vite leaves it untouched, and inside
+ * the extension it resolves against the extension origin root. Do not turn it
+ * into a relative "../" path. See CLAUDE.md "Styling" section and issue #18.
  */
 @font-face {
     font-family: "Noto Sans Tamil";
     font-style: normal;
     font-weight: 300;
     font-display: swap;
-    src: url("fonts/NotoSansTamil-Light.woff2") format("woff2");
+    src: url("/fonts/NotoSansTamil-Light.woff2") format("woff2");
     unicode-range: U+0964-0965, U+0B82-0BFA, U+200C-200D, U+20B9, U+25CC;
 }
 

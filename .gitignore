@@ -54,7 +54,8 @@ jspm_packages/
 .env.production.local
 
 # Build / distribution directories
-dist/
+.output/
+.wxt/
 build/
 out/
 

@@ -1,10 +1,10 @@
 // kuralService.ts - Service for fetching and processing Kural data
 
 import {
-    Kural,
-    KuralData,
-    MetadataSection,
-    KuralMetadataResult,
+    type Kural,
+    type KuralData,
+    type MetadataSection,
+    type KuralMetadataResult,
     FILE_PATHS
 } from '../types/models';
 

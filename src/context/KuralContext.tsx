@@ -3,12 +3,12 @@ import React, {
   useState,
   useContext,
   useEffect,
-  ReactNode,
+  type ReactNode,
 } from "react";
 import {
-  Kural,
-  KuralData,
-  KuralMetadataResult,
+  type Kural,
+  type KuralData,
+  type KuralMetadataResult,
 } from "../types/models";
 import { KuralService } from "../services/kuralService";
 

@@ -3,9 +3,9 @@ import React, {
   useState,
   useContext,
   useEffect,
-  ReactNode,
+  type ReactNode,
 } from "react";
-import { ThemeType, THEME } from "../types/models";
+import { type ThemeType, THEME } from "../types/models";
 
 interface ThemeContextType {
   theme: ThemeType;
