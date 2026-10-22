@@ -2,7 +2,7 @@ import { test, expect } from "./fixtures";
 
 // Helper: navigate to the extension new tab page
 async function goToNewTab(page: any, extensionId: string) {
-  await page.goto(`chrome-extension://${extensionId}/index.html`);
+  await page.goto(`chrome-extension://${extensionId}/newtab.html`);
 }
 
 // Helper: wait for the kural to finish loading (skeleton → content)
