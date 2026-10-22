@@ -32,17 +32,17 @@ npm install
 
 | Command | What it does |
 |---------|-------------|
-| `npm start` | Starts a watch build (dev mode, source maps inline) — rebuild happens automatically on every save |
-| `npm run build` | One-off production build into `dist/` |
+| `npm start` | WXT dev mode: watch build into `.output/chrome-mv3-dev/` with HMR; also launches a Chrome window with the extension loaded |
+| `npm run build` | One-off production build into `.output/chrome-mv3/` |
 | `npm test` | Builds then runs the full Playwright end-to-end test suite in a real Chrome window |
-| `npm run release` | Production build + zips `dist/` into `kural-tab.zip` ready for Chrome Web Store upload |
+| `npm run release` | Production build + zip (`wxt zip`) into `.output/kural-tab-<version>-chrome.zip`, ready for Chrome Web Store upload |
 
 ### Loading the extension in Chrome
 
-1. Run `npm start` (or `npm run build` for a one-off build) — this populates `dist/`.
+1. Run `npm start` (or `npm run build` for a one-off build) — this populates `.output/chrome-mv3/` (`.output/chrome-mv3-dev/` for `npm start`).
 2. Open Chrome and go to `chrome://extensions/`.
 3. Enable **Developer mode** (toggle, top right).
-4. Click **Load unpacked** and select the `dist/` folder.
+4. Click **Load unpacked** and select the `.output/chrome-mv3/` folder.
 5. Open a new tab to see the extension in action.
 
 While `npm start` is running, after making code changes Chrome will pick up the rebuild automatically — click the refresh icon on the extension card in `chrome://extensions/` to reload it.
@@ -58,7 +58,7 @@ This builds the extension first, then launches Playwright against a real Chrome 
 ### Releasing
 
 `package.json`'s `version` is the single source of truth (the build stamps it into
-`dist/manifest.json` automatically). Bump it there, then tag and push to release:
+`manifest.json` automatically). Bump it there, then tag and push to release:
 
 ```bash
 git tag v1.0.4

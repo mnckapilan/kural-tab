@@ -5,13 +5,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm start          # Watch build (dev mode, inline source maps)
-npm run build      # Production build → dist/
+npm start          # WXT dev mode: watch build → .output/chrome-mv3-dev/ with HMR, launches Chrome
+npm run build      # Production build → .output/chrome-mv3/
 npm test           # Build (via pretest) + run Playwright e2e tests (real Chrome, non-headless)
-npm run release    # Production build + zip dist/ → kural-tab.zip for Web Store upload
+npm run release    # `wxt zip` → .output/kural-tab-<version>-chrome.zip for Web Store upload
 npm run lint       # eslint src
-npm run typecheck  # tsc --noEmit (webpack strips types via Babel and never type checks)
+npm run typecheck  # tsc --noEmit (WXT/Vite strip types and never type check)
 ```
+
+`postinstall` runs `wxt prepare`, which generates `.wxt/` (tsconfig, auto-import and type declarations).
+`tsconfig.json` extends `.wxt/tsconfig.json`, so `typecheck`/`lint` need `npm install`/`npm ci` to have run first.
 
 Node version is set to 24 (latest 24.x) via `.nvmrc`; use `nvm use` before running commands.
 
@@ -19,11 +22,11 @@ Node version is set to 24 (latest 24.x) via `.nvmrc`; use `nvm use` before runni
 `recommendedTypeChecked`, and `eslint-plugin-react`. There is **no formatter** — Prettier was removed
 because it was never wired up (no script, no config file, no ESLint integration).
 
-Because Babel only strips types, **`npm run build` succeeds on code with type errors**. Run
+Because the build only strips types, **`npm run build` succeeds on code with type errors**. Run
 `npm run typecheck` explicitly after changing types.
 
 To load the extension locally: go to `chrome://extensions/`, enable Developer Mode, click "Load unpacked",
-select the `dist/` directory.
+select the `.output/chrome-mv3/` directory (after `npm run build`).
 
 To run a single Playwright test file:
 ```bash
@@ -34,15 +37,17 @@ npx playwright test tests/newtab.spec.ts
 
 Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page with a random
 [Thirukkural](https://en.wikipedia.org/wiki/Kural) couplet. It's a React 18 app built with
-Webpack 5 + Babel + TypeScript.
+[WXT](https://wxt.dev) (Vite-based) + TypeScript, with React 19 via `@wxt-dev/module-react`.
 
-**Entry points** (webpack bundle name → output file):
-- `content` → `src/index.tsx` → `dist/content.js` — the React app, mounted into `#root` in
-  `static/index.html` on `DOMContentLoaded`. Note the bundle is named `content` for historical reasons;
-  it is the new tab page, not a content script.
-- `background` → `src/background.ts` → `dist/background.js` — service worker; on icon click opens a new
-  tab and injects `content.js` into it.
-- `static/manifest.json` — Manifest V3; declares `chrome_url_overrides.newtab`, storage + scripting permissions.
+**Entry points** (WXT `srcDir: "src"`; entrypoints are discovered by convention in `src/entrypoints/`):
+- `src/entrypoints/newtab/index.html` + `main.tsx` → `.output/chrome-mv3/newtab.html` — the React app,
+  mounted into `#root` on `DOMContentLoaded`. WXT maps a `newtab` entrypoint to
+  `chrome_url_overrides.newtab` automatically.
+- `src/entrypoints/background.ts` → `background.js` — service worker (`defineBackground`); on icon click
+  just opens a new tab (`chrome.tabs.create({})`), which Chrome resolves to the new tab override. No script
+  injection, so no `scripting` permission.
+- There is no `manifest.json` file: the manifest is generated from `wxt.config.ts` (name, description,
+  `permissions: ["storage"]`, `action.default_title`). `version` comes from `package.json`.
 
 **State management via React Context:**
 - `src/context/KuralContext.tsx` — Owns kural data, random selection, and favourites. Fetches once and
@@ -68,7 +73,7 @@ opened outside an extension context.
   Under that root: 3 sections (அறத்துப்பால்/Virtue, பொருட்பால்/Wealth, காமத்துப்பால்/Love) → chapterGroups
   (இயல்) → chapters. `MetadataSection` in `models.ts` doesn't declare the file's `repo` key; harmless.
 
-Both are copied into `dist/data/` by CopyWebpackPlugin and fetched at runtime (not bundled).
+They live in `public/data/` (WXT's `publicDir`, copied verbatim to `.output/chrome-mv3/data/`) and are fetched at runtime (not bundled). `FILE_PATHS` uses relative `data/...` paths, which resolve against `newtab.html` at the extension root.
 
 **Component tree:**
 ```
@@ -99,40 +104,39 @@ which the stylesheet uses to align the surrounding blocks to the couplet. Changi
 markup or its `div > div` structure will break this measurement.
 
 **Styling — single source of truth, plus a small inlined critical-CSS block:**
-`src/styles/style.css` is the ONLY stylesheet — imported by `index.tsx`, injected as a `<style>` tag at
-runtime by `style-loader`. **Edit `src/styles/style.css`.** There used to be a second, hand-maintained
-`static/style.css` that silently drifted out of sync (see #19); it has been deleted.
+`src/styles/style.css` is the ONLY stylesheet — imported by `src/entrypoints/newtab/main.tsx` and bundled by
+Vite into a hashed `assets/newtab-*.css` linked from `newtab.html`. **Edit `src/styles/style.css`.** There
+used to be a second, hand-maintained `static/style.css` that silently drifted out of sync (see #19); it has
+been deleted.
 
-To avoid a flash of unstyled content before `content.js` loads and style-loader injects the real
-stylesheet, `static/index.html` has a small inline `<style>` block in its `<head>` with just the body
-background/text colour (light/dark CSS vars) and basic centering layout — deliberately minimal, not a
-duplicate stylesheet. If you change `body`, `:root`, `.light-mode` colour vars, or `.no-transition` in
-`src/styles/style.css`, check whether the inline block in `static/index.html` needs the same update.
+To avoid a flash of unstyled content before the bundled CSS/JS loads, `src/entrypoints/newtab/index.html`
+has a small inline `<style>` block in its `<head>` with just the body background/text colour (light/dark
+CSS vars) and basic centering layout — deliberately minimal, not a duplicate stylesheet. If you change
+`body`, `:root`, `.light-mode` colour vars, or `.no-transition` in `src/styles/style.css`, check whether
+the inline block needs the same update.
 
-Noto Sans Tamil is self-hosted, not loaded from Google Fonts: `static/fonts/NotoSansTamil-Light.woff2`
+Noto Sans Tamil is self-hosted, not loaded from Google Fonts: `public/fonts/NotoSansTamil-Light.woff2`
 (weight 300 — the only weight used anywhere in the app; `body` sets `font-weight: 300` and nothing
 overrides it) is subsetted to the Tamil unicode range and declared via `@font-face` at the top of
-`src/styles/style.css`. `static/fonts/LICENSE.txt` carries the required SIL OFL 1.1 text. The `@font-face`
-`src: url(...)` uses a bare `fonts/...` path because `src/styles/style.css` is injected as a runtime
-`<style>` tag by style-loader, so it resolves relative to `dist/index.html`, not to the source file —
-see the css-loader `url: false` option in `webpack.common.js`, which is required for this to work
-(css-loader would otherwise try to resolve the font path as a webpack module relative to `src/styles/`
-and fail).
+`src/styles/style.css`. `public/fonts/LICENSE.txt` carries the required SIL OFL 1.1 text. The
+`@font-face` `src: url(...)` is an absolute public path (`/fonts/...`): Vite leaves such URLs untouched
+and `public/` is copied to the output root, so it resolves against the extension origin. Don't make it
+relative to the CSS file.
 
 **Build config:**
-- `webpack.common.js` — Both entries, Babel loader for TS/TSX, style-loader + css-loader (with
-  `url: false`, see above) for CSS, and CopyWebpackPlugin bundling `static/` → `dist/` and
-  `data/` → `dist/data/`. `output.clean` wipes `dist/`.
-- `webpack.dev.js` / `webpack.prod.js` — Merge with common; both define `__DEV__` via DefinePlugin
-  (true in dev, false in prod). Dev uses inline source maps.
-- `tsconfig.json` — `strict: true`, `jsx: "react"`. Note it still sets `outDir`/`rootDir` even though tsc
-  is only used for checking.
+- `wxt.config.ts` — `srcDir: "src"`, `publicDir: "public"`, the `@wxt-dev/module-react` module, and the
+  `manifest` block (see above). `output` goes to `.output/chrome-mv3/` (`.output/chrome-mv3-dev/` in dev).
+  `import.meta.env.DEV` replaces the old `__DEV__` define (true under `npm start`, false in builds).
+- `tsconfig.json` — extends `.wxt/tsconfig.json` (generated by `wxt prepare`). It turns off
+  `noUncheckedIndexedAccess` and `noImplicitOverride`, which WXT's base enables but the code wasn't written
+  against. `verbatimModuleSyntax` is on, so type-only imports must use `import type` / `type X`.
+- `.output/` and `.wxt/` are gitignored and eslint-ignored.
 
 **Tests (`tests/`):**
 - `fixtures.ts` — Extends the Playwright `test` fixture to launch a persistent Chromium context with
-  `--load-extension=dist`, and derives `extensionId` from the service worker URL. Tests must run
+  `--load-extension=.output/chrome-mv3`, and derives `extensionId` from the service worker URL. Tests must run
   non-headless (set in `playwright.config.ts`); extensions don't load headless.
-- `newtab.spec.ts` — Navigates to `chrome-extension://<id>/index.html` and covers rendering, kural number
+- `newtab.spec.ts` — Navigates to `chrome-extension://<id>/newtab.html` and covers rendering, kural number
   range, randomise, star toggle, favourites panel, theme toggle, and metadata links. Tests assert on CSS
   class names (`.quote-text`, `.star-button`, `.favourites-item`, …) — renaming a class breaks tests.
 - Favourites persist in `chrome.storage.sync` within a run, so tests clean up after themselves by
@@ -140,9 +144,9 @@ and fail).
 
 **CI/CD (`.github/workflows/`):**
 - `build.yml` — Reusable workflow (`workflow_call`, takes `artifact_name` + `retention_days`):
-  checkout → Node from `.nvmrc` → `npm ci` → `npm run build` → upload `dist/` artifact.
+  checkout → Node from `.nvmrc` → `npm ci` → `npm run build` → upload `.output/chrome-mv3/` artifact.
 - `checks.yml` — Reusable workflow (`workflow_call`, takes `artifact_name`): a `static` job runs `lint`
-  and `typecheck` in a matrix, and an `e2e` job downloads the already-built `dist/` artifact (rather than
+  and `typecheck` in a matrix (`npm ci` runs `postinstall` → `wxt prepare`, which generates the `.wxt/` that `tsconfig.json` extends), and an `e2e` job downloads the already-built `.output/chrome-mv3/` artifact (rather than
   rebuilding) and runs Playwright against it via `xvfb-run -a npx playwright test`, so CI tests the exact
   bytes that get shipped. `xvfb-run` provides a virtual display, since extensions require headed Chrome
   and GitHub's Linux runners have no display server. On failure it uploads `playwright-report/` as an
@@ -150,7 +154,7 @@ and fail).
 - `main.yml` — Runs on pushes to `main` and `v*.*.*` tags. Calls `build.yml` then `checks.yml`. A
   `verify-version` job (tag pushes only) fails the run if the pushed tag doesn't match `v<package.json
   version>`. `upload-extension` needs all three of `build-extension`, `checks`, and `verify-version`, and
-  is further gated on `startsWith(github.ref, 'refs/tags/v')`; it zips `dist/` and runs
+  is further gated on `startsWith(github.ref, 'refs/tags/v')`; it zips `.output/chrome-mv3/` into `kural-tab.zip` and runs
   `chrome-webstore-upload-cli` (pinned to `@4.0.1`: v4.0.0 removed the `--client-id`/`--client-secret`/
   `--refresh-token` flags in favour of env vars and added a required publisher ID, so an unpinned install
   broke this step silently) with the bare `upload` command, which uploads a **draft only**. In Web Store
@@ -173,10 +177,10 @@ and fail).
   pinned to commit SHAs with a trailing `# vX.Y.Z` comment; Dependabot (`.github/dependabot.yml`) keeps
   those pins current.
 
-**Releasing:** `package.json`'s `version` is the single source of truth (currently 1.0.4).
-`static/manifest.json` keeps a `0.0.0` placeholder — `webpack.common.js`'s CopyWebpackPlugin `transform`
-overwrites it with `package.json`'s version whenever `static/` is copied to `dist/`, so `dist/manifest.json`
-(what actually ships) always matches `package.json` and the two can't drift. Only bump `package.json` before
+**Releasing:** `package.json`'s `version` is the single source of truth (currently 1.0.5).
+WXT stamps it into the generated `manifest.json` (there is no manifest source file to keep in sync), so
+what ships always matches `package.json`. `npm run release` (`wxt zip`) writes a versioned zip to `.output/`
+for manual uploads; CI zips the built artifact itself as `kural-tab.zip`. Only bump `package.json` before
 tagging. Publishing is tag-driven: `git tag v1.0.4 && git push origin v1.0.4`; `verify-version` fails the
 run if the tag and `package.json` disagree. The Web Store upload only produces a draft; submitting it for
 Google's review from the Developer Dashboard is a manual step and the intentional release gate.
