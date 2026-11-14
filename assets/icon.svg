@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#5f6368"/>
+  <!-- Bold sans-serif "K" drawn as a path so rendering needs no fonts -->
+  <path fill="#fff" transform="translate(-5 0)" d="M38 28H56V56L78 28H100L73 61L102 100H80L59 72L56 75V100H38Z"/>
+</svg>
