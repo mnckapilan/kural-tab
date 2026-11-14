@@ -165,8 +165,8 @@ relative to the CSS file.
   `softprops/action-gh-release`. Secrets: `CI_GOOGLE_CLIENT_ID`, `CI_GOOGLE_CLIENT_SECRET`,
   `CI_GOOGLE_REFRESH_TOKEN`, `CI_GOOGLE_PUBLISHER_ID` (the last must be created in repo settings — found
   on the Developer Dashboard Settings page — or the step fails); extension ID
-  `njidhifbpgbfadoffhibkjnnkfhcglpc`. The `upload-extension` job pins Node inline (`node-version: "22"`)
-  rather than using `.nvmrc`, because it checks out no source.
+  `njidhifbpgbfadoffhibkjnnkfhcglpc`. Like the other jobs, `upload-extension` checks out the repo and takes
+  Node from `.nvmrc`.
 - `pr-comment.yml` — Also calls `build.yml` then `checks.yml`, then posts a PR comment linking the build
   artifact for manual testing via the SHA-pinned `thollander/actions-comment-pull-request`. Runs under a
   `${{ github.workflow }}-${{ github.ref }}` concurrency group with `cancel-in-progress: true`, so pushing

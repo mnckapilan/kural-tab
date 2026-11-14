@@ -24,7 +24,7 @@ Kural Tab is a Chrome extension that replaces your new tab page with a random Th
 ```bash
 git clone https://github.com/mnckapilan/kural-tab.git
 cd kural-tab
-nvm use          # switches to the pinned Node version (22.16.0)
+nvm use          # switches to the pinned Node version (24.x)
 npm install
 ```
 
