@@ -1,16 +1,9 @@
-/// <reference types="chrome"/>
 import React from "react";
 import { ThemeProvider } from "../context/ThemeContext";
 import { KuralProvider } from "../context/KuralContext";
 import ThemeToggle from "./ThemeToggle";
 import KuralDisplay from "./KuralDisplay";
 import ErrorBoundary from "./ErrorBoundary";
-
-declare global {
-  interface Window {
-    chrome: typeof chrome;
-  }
-}
 
 const App: React.FC = () => {
   return (
