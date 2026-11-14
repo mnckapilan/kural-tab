@@ -13,7 +13,7 @@ npm run lint       # eslint src
 npm run typecheck  # tsc --noEmit (webpack strips types via Babel and never type checks)
 ```
 
-Node version is pinned to 22.16.0 via `.nvmrc`; use `nvm use` before running commands.
+Node version is set to 24 (latest 24.x) via `.nvmrc`; use `nvm use` before running commands.
 
 `eslint.config.mjs` is a flat config using `@eslint/js` recommended, `typescript-eslint`
 `recommendedTypeChecked`, and `eslint-plugin-react`. There is **no formatter** — Prettier was removed
