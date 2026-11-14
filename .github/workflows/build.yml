@@ -36,12 +36,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
+      # `wxt zip` runs the production build (leaving .output/chrome-mv3/ in place)
+      # and zips it to .output/kural-tab-<version>-chrome.zip. Both come from the
+      # same build, so the e2e tests (unzipped dir) and the Web Store upload (zip)
+      # cover the same bytes.
+      - name: Build and zip
+        run: npm run zip
 
       - name: Upload Unzipped Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact_name }}
           path: .output/chrome-mv3/
+          retention-days: ${{ inputs.retention_days }}
+
+      - name: Upload Zip Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}-zip
+          path: .output/*-chrome.zip
+          if-no-files-found: error
           retention-days: ${{ inputs.retention_days }}

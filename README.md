@@ -35,7 +35,8 @@ npm install
 | `npm start` | WXT dev mode: watch build into `.output/chrome-mv3-dev/` with HMR; also launches a Chrome window with the extension loaded |
 | `npm run build` | One-off production build into `.output/chrome-mv3/` |
 | `npm test` | Builds then runs the full Playwright end-to-end test suite in a real Chrome window |
-| `npm run release` | Production build + zip (`wxt zip`) into `.output/kural-tab-<version>-chrome.zip`, ready for Chrome Web Store upload |
+| `npm run zip` | Production build + zip (`wxt zip`) into `.output/kural-tab-<version>-chrome.zip`, ready for Chrome Web Store upload |
+| `npm run submit` | Upload a zip to the Chrome Web Store (`wxt submit`); CI runs this on version tags |
 
 ### Loading the extension in Chrome
 
@@ -65,7 +66,7 @@ git tag v1.0.4
 git push origin v1.0.4
 ```
 
-This triggers the GitHub Actions workflow which builds, zips, and uploads to the Chrome Web Store. To produce the zip locally without publishing, run `npm run release`.
+This triggers the GitHub Actions workflow which builds, zips, and uploads to the Chrome Web Store. To produce the zip locally without publishing, run `npm run zip`.
 
 ## Contributing
 

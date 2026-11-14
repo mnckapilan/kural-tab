@@ -62,33 +62,31 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download build artifact
+      # The zip `wxt zip` produced in the build job, i.e. the bytes the e2e tests ran against
+      - name: Download zip artifact
         uses: actions/download-artifact@v4
         with:
-          name: kural-tab-${{ github.sha }}
-          path: .output/chrome-mv3/
+          name: kural-tab-${{ github.sha }}-zip
+          path: .output/
 
-      - name: Zip extension for Chrome Web Store
-        run: cd .output/chrome-mv3 && zip -r ../../kural-tab.zip .
-
-      # chrome-webstore-upload-cli is pinned to an exact version (no caret) in
-      # devDependencies: v4 dropped the --client-id/--client-secret/--refresh-token
-      # flags and added a required PUBLISHER_ID, so an unpinned install silently
-      # broke this step the day v4.0.0 shipped.
-      # The bare "upload" command uploads a draft only. Omitting the command
-      # would upload *and* publish, i.e. submit for Google's review — we submit
-      # from the Developer Dashboard instead, so the draft is the handoff point.
+      # `wxt submit` (publish-browser-extension). CHROME_SKIP_SUBMIT_REVIEW uploads a
+      # draft only and does not submit it for Google's review: a human submits it from
+      # the Developer Dashboard, which is the intentional release gate.
       - name: Upload draft to Chrome Web Store
         env:
-          EXTENSION_ID: njidhifbpgbfadoffhibkjnnkfhcglpc
-          PUBLISHER_ID: ${{ secrets.CI_GOOGLE_PUBLISHER_ID }}
-          CLIENT_ID: ${{ secrets.CI_GOOGLE_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.CI_GOOGLE_CLIENT_SECRET }}
-          REFRESH_TOKEN: ${{ secrets.CI_GOOGLE_REFRESH_TOKEN }}
-        run: npx chrome-webstore-upload upload --source kural-tab.zip
+          CHROME_API_VERSION: v2
+          CHROME_EXTENSION_ID: njidhifbpgbfadoffhibkjnnkfhcglpc
+          CHROME_PUBLISHER_ID: ${{ secrets.CI_GOOGLE_PUBLISHER_ID }}
+          # API v2 in publish-browser-extension authenticates with a Google Cloud service
+          # account (not an OAuth refresh token). See CLAUDE.md "CI/CD" for setup.
+          CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CI_GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+          CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CI_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY }}
+          CHROME_SKIP_SUBMIT_REVIEW: "true"
+        run: npm run submit -- --chrome-zip .output/*-chrome.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
-          files: kural-tab.zip
+          files: .output/*-chrome.zip
+          fail_on_unmatched_files: true
           generate_release_notes: true

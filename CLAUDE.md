@@ -8,7 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm start          # WXT dev mode: watch build → .output/chrome-mv3-dev/ with HMR, launches Chrome
 npm run build      # Production build → .output/chrome-mv3/
 npm test           # Build (via pretest) + run Playwright e2e tests (real Chrome, non-headless)
-npm run release    # `wxt zip` → .output/kural-tab-<version>-chrome.zip for Web Store upload
+npm run zip        # `wxt zip`: production build + .output/kural-tab-<version>-chrome.zip
+npm run submit     # `wxt submit`: upload a zip to the Chrome Web Store (CI does this on tags)
 npm run lint       # eslint src
 npm run typecheck  # tsc --noEmit (WXT/Vite strip types and never type check)
 ```
@@ -149,7 +150,9 @@ relative to the CSS file.
 
 **CI/CD (`.github/workflows/`):**
 - `build.yml` — Reusable workflow (`workflow_call`, takes `artifact_name` + `retention_days`):
-  checkout → Node from `.nvmrc` → `npm ci` → `npm run build` → upload `.output/chrome-mv3/` artifact.
+  checkout → Node from `.nvmrc` → `npm ci` → `npm run zip` (`wxt zip`: production build + zip) → upload
+  two artifacts from that one build: `<artifact_name>` (unzipped `.output/chrome-mv3/`, used by e2e) and
+  `<artifact_name>-zip` (`.output/kural-tab-<version>-chrome.zip`, used for the Web Store upload).
 - `checks.yml` — Reusable workflow (`workflow_call`, takes `artifact_name`): a `static` job runs `lint`
   and `typecheck` in a matrix (`npm ci` runs `postinstall` → `wxt prepare`, which generates the `.wxt/` that `tsconfig.json` extends), and an `e2e` job downloads the already-built `.output/chrome-mv3/` artifact (rather than
   rebuilding) and runs Playwright against it via `xvfb-run -a npx playwright test`, so CI tests the exact
@@ -159,19 +162,26 @@ relative to the CSS file.
 - `main.yml` — Runs on pushes to `main` and `v*.*.*` tags. Calls `build.yml` then `checks.yml`. A
   `verify-version` job (tag pushes only) fails the run if the pushed tag doesn't match `v<package.json
   version>`. `upload-extension` needs all three of `build-extension`, `checks`, and `verify-version`, and
-  is further gated on `startsWith(github.ref, 'refs/tags/v')`; it zips `.output/chrome-mv3/` into `kural-tab.zip` and runs
-  `chrome-webstore-upload-cli` (pinned exactly, currently `4.0.2`: v4.0.0 removed the `--client-id`/`--client-secret`/
-  `--refresh-token` flags in favour of env vars and added a required publisher ID, so an unpinned install
-  broke this step silently) with the bare `upload` command, which uploads a **draft only**. In Web Store
-  terms "publish" means submitting for Google's review, so the draft is the intentional handoff point — a
-  human submits it for review from the Chrome Web Store Developer Dashboard. Credentials are passed as
-  environment variables: `CLIENT_ID`, `CLIENT_SECRET`, `REFRESH_TOKEN`, `PUBLISHER_ID`, `EXTENSION_ID`.
-  On a successful upload it cuts a GitHub Release with `kural-tab.zip` attached via the SHA-pinned
-  `softprops/action-gh-release`. Secrets: `CI_GOOGLE_CLIENT_ID`, `CI_GOOGLE_CLIENT_SECRET`,
-  `CI_GOOGLE_REFRESH_TOKEN`, `CI_GOOGLE_PUBLISHER_ID` (the last must be created in repo settings — found
-  on the Developer Dashboard Settings page — or the step fails); extension ID
+  is further gated on `startsWith(github.ref, 'refs/tags/v')`. It downloads the `-zip` artifact and runs
+  `npm run submit -- --chrome-zip .output/*-chrome.zip` (`wxt submit`, i.e. `publish-browser-extension`)
+  with `CHROME_SKIP_SUBMIT_REVIEW=true`, which uploads a **draft only**. In Web Store terms "publish" means
+  submitting for Google's review, so the draft is the intentional handoff point — a human submits it for
+  review from the Chrome Web Store Developer Dashboard. It uses Chrome Web Store API v2
+  (`CHROME_API_VERSION=v2`), which in `publish-browser-extension` authenticates **only with a Google Cloud
+  service account** (OAuth client ID/secret/refresh token are v1.1-only). Then it cuts a GitHub Release
+  with the zip attached via the SHA-pinned `softprops/action-gh-release`. Extension ID
   `njidhifbpgbfadoffhibkjnnkfhcglpc`. Like the other jobs, `upload-extension` checks out the repo and takes
-  Node from `.nvmrc`.
+  Node from `.nvmrc` (it needs `node_modules` for `wxt`).
+
+  Secrets: `CI_GOOGLE_PUBLISHER_ID` (Developer Dashboard → Settings), `CI_GOOGLE_SERVICE_ACCOUNT_EMAIL`,
+  `CI_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`. One-time service account setup:
+  1. In Google Cloud (any project), enable the **Chrome Web Store API**, then create a service account.
+  2. Create a JSON key for it; `client_email` → `CI_GOOGLE_SERVICE_ACCOUNT_EMAIL`, `private_key` (the full
+     PEM, newlines intact) → `CI_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`.
+  3. In the Chrome Web Store Developer Dashboard → Account, add the service account's email so it can
+     manage the publisher's items.
+  To check credentials without uploading, set the same `CHROME_*` env vars locally and run
+  `npm run zip && npm run submit -- --dry-run --chrome-zip .output/*-chrome.zip`.
 - `pr-comment.yml` — Also calls `build.yml` then `checks.yml`, then posts a PR comment linking the build
   artifact for manual testing via the SHA-pinned `thollander/actions-comment-pull-request`. Runs under a
   `${{ github.workflow }}-${{ github.ref }}` concurrency group with `cancel-in-progress: true`, so pushing
@@ -184,8 +194,8 @@ relative to the CSS file.
 
 **Releasing:** `package.json`'s `version` is the single source of truth (currently 1.0.5).
 WXT stamps it into the generated `manifest.json` (there is no manifest source file to keep in sync), so
-what ships always matches `package.json`. `npm run release` (`wxt zip`) writes a versioned zip to `.output/`
-for manual uploads; CI zips the built artifact itself as `kural-tab.zip`. Only bump `package.json` before
+what ships always matches `package.json`. `npm run zip` (`wxt zip`) writes the versioned zip to `.output/`;
+CI uses the same command, so local and CI zips are built the same way. Only bump `package.json` before
 tagging. Publishing is tag-driven: `git tag v1.0.4 && git push origin v1.0.4`; `verify-version` fails the
 run if the tag and `package.json` disagree. The Web Store upload only produces a draft; submitting it for
 Google's review from the Developer Dashboard is a manual step and the intentional release gate.
