@@ -36,8 +36,8 @@ npx playwright test tests/newtab.spec.ts
 ## Architecture
 
 Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page with a random
-[Thirukkural](https://en.wikipedia.org/wiki/Kural) couplet. It's a React 18 app built with
-[WXT](https://wxt.dev) (Vite-based) + TypeScript, with React 19 via `@wxt-dev/module-react`.
+[Thirukkural](https://en.wikipedia.org/wiki/Kural) couplet. It's a React 19 app built with
+[WXT](https://wxt.dev) (Vite-based) + TypeScript; React is wired in via `@wxt-dev/module-react`.
 
 **Entry points** (WXT `srcDir: "src"`; entrypoints are discovered by convention in `src/entrypoints/`):
 - `src/entrypoints/newtab/index.html` + `main.tsx` → `.output/chrome-mv3/newtab.html` — the React app,
@@ -48,6 +48,9 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
   injection, so no `scripting` permission.
 - There is no `manifest.json` file: the manifest is generated from `wxt.config.ts` (name, description,
   `permissions: ["storage"]`, `action.default_title`). `version` comes from `package.json`.
+- Icons: `public/icon/{16,32,48,128}.png`, auto-discovered by WXT into the manifest's `icons` (Chrome
+  also uses them for the toolbar button). They are rendered from the master `assets/icon.svg` (grey
+  rounded square, white "K" as a path) with `rsvg-convert -w N -h N assets/icon.svg -o public/icon/N.png`.
 
 **State management via React Context:**
 - `src/context/KuralContext.tsx` — Owns kural data, random selection, and favourites. Fetches once and
@@ -157,7 +160,7 @@ relative to the CSS file.
   `verify-version` job (tag pushes only) fails the run if the pushed tag doesn't match `v<package.json
   version>`. `upload-extension` needs all three of `build-extension`, `checks`, and `verify-version`, and
   is further gated on `startsWith(github.ref, 'refs/tags/v')`; it zips `.output/chrome-mv3/` into `kural-tab.zip` and runs
-  `chrome-webstore-upload-cli` (pinned to `@4.0.1`: v4.0.0 removed the `--client-id`/`--client-secret`/
+  `chrome-webstore-upload-cli` (pinned exactly, currently `4.0.2`: v4.0.0 removed the `--client-id`/`--client-secret`/
   `--refresh-token` flags in favour of env vars and added a required publisher ID, so an unpinned install
   broke this step silently) with the bare `upload` command, which uploads a **draft only**. In Web Store
   terms "publish" means submitting for Google's review, so the draft is the intentional handoff point — a
