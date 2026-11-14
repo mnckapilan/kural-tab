@@ -1,21 +1,15 @@
-import React from "react";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "../../components/App";
 import "../../styles/style.css";
 
-// Initialize the app when the DOM is ready
-document.addEventListener("DOMContentLoaded", () => {
-  const container = document.getElementById("root");
+const container = document.getElementById("root");
+if (!container) {
+  throw new Error("Failed to find #root element in newtab.html");
+}
 
-  if (!container) {
-    console.error("Failed to find root element");
-    return;
-  }
-
-  const root = createRoot(container);
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
-});
+createRoot(container).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
