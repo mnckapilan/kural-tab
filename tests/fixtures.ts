@@ -27,6 +27,9 @@ export const test = base.extend<{
       background = await context.waitForEvent("serviceworker");
     }
     const extensionId = background.url().split("/")[2];
+    if (!extensionId) {
+      throw new Error(`Could not derive extension ID from ${background.url()}`);
+    }
     await use(extensionId);
   },
 });

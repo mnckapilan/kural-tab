@@ -1,11 +1,7 @@
 {
   "extends": "./.wxt/tsconfig.json",
   "compilerOptions": {
-    "jsx": "react-jsx",
-    // WXT's generated config enables these extra checks; the pre-migration
-    // codebase wasn't written against them, and this PR is tooling-only.
-    "noUncheckedIndexedAccess": false,
-    "noImplicitOverride": false
+    "jsx": "react-jsx"
   },
   "exclude": ["node_modules", ".output"]
 }
