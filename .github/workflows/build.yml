@@ -41,7 +41,11 @@ jobs:
       # same build, so the e2e tests (unzipped dir) and the Web Store upload (zip)
       # cover the same bytes.
       - name: Build and zip
-        run: npm run zip
+        id: zip
+        run: |
+          npm run zip
+          # Resolve the exact path: upload-artifact's globbing skips hidden dirs like .output/
+          echo "path=$(ls .output/*-chrome.zip)" >> "$GITHUB_OUTPUT"
 
       - name: Upload Unzipped Artifact
         uses: actions/upload-artifact@v4
@@ -54,6 +58,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact_name }}-zip
-          path: .output/*-chrome.zip
+          path: ${{ steps.zip.outputs.path }}
           if-no-files-found: error
           retention-days: ${{ inputs.retention_days }}
