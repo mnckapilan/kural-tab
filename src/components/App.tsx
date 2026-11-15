@@ -4,15 +4,18 @@ import { KuralProvider } from "../context/KuralContext";
 import ThemeToggle from "./ThemeToggle";
 import KuralDisplay from "./KuralDisplay";
 import ErrorBoundary from "./ErrorBoundary";
+import MotionProvider from "./MotionProvider";
 
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <ThemeProvider>
-        <KuralProvider>
-          <AppContent />
-        </KuralProvider>
-      </ThemeProvider>
+      <MotionProvider>
+        <ThemeProvider>
+          <KuralProvider>
+            <AppContent />
+          </KuralProvider>
+        </ThemeProvider>
+      </MotionProvider>
     </ErrorBoundary>
   );
 };

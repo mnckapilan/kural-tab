@@ -1,11 +1,13 @@
 import React from "react";
 import { Moon, Sun } from "lucide-react";
+import { AnimatePresence, m } from "motion/react";
 import { THEME } from "../types/models";
 import { useTheme } from "../context/ThemeContext";
 import { Button } from "@/components/ui/button";
+import { FADE_IN, FADE_OUT } from "@/lib/motion";
 
-// Both icons are always mounted and stacked; the `dark:` variant on <html>
-// drives the cross-fade + 180° rotation.
+// Sun/Moon swap with a rotate + fade. `initial={false}` skips the animation on
+// first render (same intent as the `no-transition` flash prevention).
 const ThemeToggle: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
 
@@ -20,8 +22,21 @@ const ThemeToggle: React.FC = () => {
       onClick={toggleTheme}
     >
       <span className="relative size-6">
-        <Moon className="absolute inset-0 size-6 rotate-180 opacity-0 transition-all duration-300 dark:rotate-0 dark:opacity-100" />
-        <Sun className="absolute inset-0 size-6 rotate-0 opacity-100 transition-all duration-300 dark:-rotate-180 dark:opacity-0" />
+        <AnimatePresence initial={false} mode="wait">
+          <m.span
+            key={theme}
+            className="absolute inset-0 flex items-center justify-center"
+            initial={{ opacity: 0, rotate: -90 }}
+            animate={{ opacity: 1, rotate: 0, transition: FADE_IN }}
+            exit={{ opacity: 0, rotate: 90, transition: FADE_OUT }}
+          >
+            {theme === THEME.DARK ? (
+              <Moon className="size-6" />
+            ) : (
+              <Sun className="size-6" />
+            )}
+          </m.span>
+        </AnimatePresence>
       </span>
     </Button>
   );

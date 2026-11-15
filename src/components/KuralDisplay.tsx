@@ -7,6 +7,7 @@ import KuralMeaning from "./KuralMeaning";
 import KuralSkeleton from "./KuralSkeleton";
 import { useKuralLayout } from "../hooks/useKuralLayout";
 import { Star } from "lucide-react";
+import { AnimatePresence, m } from "motion/react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/popover";
 import { QUOTE_CONTAINER } from "@/lib/styles";
 import { cn } from "@/lib/utils";
+import { FADE_IN, FADE_OUT } from "@/lib/motion";
 
 const KuralDisplay: React.FC = () => {
   const {
@@ -31,6 +33,8 @@ const KuralDisplay: React.FC = () => {
   } = useKural();
   const { textWidth, handleLayoutChange } = useKuralLayout();
   const [showFavourites, setShowFavourites] = useState(false);
+  // Bumped on each star click so the "pop" plays only on user toggles, not on navigation.
+  const [starToggles, setStarToggles] = useState(0);
 
   const favouriteItems = useMemo(() => {
     if (!kuralData) return [];
@@ -69,7 +73,12 @@ const KuralDisplay: React.FC = () => {
   const starred = isFavourite(kural.Number);
 
   return (
-    <div className={QUOTE_CONTAINER} style={containerStyle}>
+    <m.div
+      className={QUOTE_CONTAINER}
+      style={containerStyle}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1, transition: FADE_IN }}
+    >
       <div
         className="mb-[15px] flex items-center gap-2.5 text-left text-[28px] text-muted-foreground max-[600px]:mb-2.5 max-[600px]:text-xs"
         data-testid="kural-number"
@@ -89,21 +98,54 @@ const KuralDisplay: React.FC = () => {
           variant="muted"
           size="icon-round"
           className={cn(starred && "border-foreground text-foreground")}
-          onClick={() => toggleFavourite(kural.Number)}
+          onClick={() => {
+            toggleFavourite(kural.Number);
+            setStarToggles((n) => n + 1);
+          }}
           aria-pressed={starred}
           aria-label={starred ? "Remove from favourites" : "Add to favourites"}
         >
-          <Star aria-hidden="true" className={cn(starred && "fill-current")} />
+          <m.span
+            key={starToggles}
+            className="flex"
+            initial={starred && starToggles > 0 ? { scale: 0.6 } : false}
+            animate={{
+              scale: 1,
+              transition: { type: "spring", duration: 0.3, bounce: 0.5 },
+            }}
+            whileTap={{ scale: 0.85 }}
+          >
+            <Star
+              aria-hidden="true"
+              className={cn(starred && "fill-current")}
+            />
+          </m.span>
         </Button>
       </div>
 
-      <KuralMetadata metadata={metadata} />
+      {/*
+        Couplet swap: `wait` guarantees only one block (and one set of test ids)
+        exists at a time, so the new KuralText measures itself after it mounts
+        and `--kural-text-width` is only updated for the new couplet. The number
+        row above updates instantly. `initial={false}` skips the first mount,
+        which the card fade-in already covers.
+      */}
+      <AnimatePresence initial={false} mode="wait">
+        <m.div
+          key={kural.Number}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0, transition: FADE_IN }}
+          exit={{ opacity: 0, y: -4, transition: FADE_OUT }}
+        >
+          <KuralMetadata metadata={metadata} />
 
-      <KuralText kural={kural} onLayoutChanged={handleLayoutChange} />
+          <KuralText kural={kural} onLayoutChanged={handleLayoutChange} />
 
-      <KuralExplanation explanation={kural.Translation} />
+          <KuralExplanation explanation={kural.Translation} />
 
-      <KuralMeaning meaning={kural.mv} />
+          <KuralMeaning meaning={kural.mv} />
+        </m.div>
+      </AnimatePresence>
 
       <div className="mt-5 text-left">
         <Popover open={showFavourites} onOpenChange={setShowFavourites}>
@@ -172,7 +214,7 @@ const KuralDisplay: React.FC = () => {
           </PopoverContent>
         </Popover>
       </div>
-    </div>
+    </m.div>
   );
 };
 

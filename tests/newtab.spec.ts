@@ -64,6 +64,7 @@ test.describe("Kural Tab new tab page", () => {
     const firstNumber = await page
       .getByTestId("kural-number-value")
       .textContent();
+    const firstText = await page.getByTestId("kural-text").textContent();
 
     // Click randomise and wait for re-render — retry a few times if we hit
     // the same kural by chance (1/1330 probability per attempt)
@@ -78,6 +79,13 @@ test.describe("Kural Tab new tab page", () => {
 
     // After a few attempts we should have gotten a different kural
     expect(newNumber).not.toBe(firstNumber);
+
+    // The couplet swaps with a short exit/enter animation; once it settles
+    // only the new couplet remains in the DOM.
+    await expect(page.getByTestId("kural-text")).toHaveCount(1);
+    await expect(page.getByTestId("kural-text")).not.toHaveText(
+      firstText ?? "",
+    );
   });
 
   test("star button toggles favourite state", async ({
