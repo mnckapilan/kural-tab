@@ -69,10 +69,11 @@ jobs:
           name: kural-tab-${{ github.sha }}-zip
           path: .output/
 
-      # `wxt submit` (publish-browser-extension). CHROME_SKIP_SUBMIT_REVIEW uploads a
-      # draft only and does not submit it for Google's review: a human submits it from
-      # the Developer Dashboard, which is the intentional release gate.
-      - name: Upload draft to Chrome Web Store
+      # `wxt submit` (publish-browser-extension) uploads the zip and submits it for
+      # Google's review. STAGED_PUBLISH means an approved version is not published
+      # automatically: a human clicks Publish in the Developer Dashboard, which is the
+      # intentional release gate.
+      - name: Submit to Chrome Web Store for review
         env:
           CHROME_API_VERSION: v2
           CHROME_EXTENSION_ID: njidhifbpgbfadoffhibkjnnkfhcglpc
@@ -81,7 +82,7 @@ jobs:
           # account (not an OAuth refresh token). See CLAUDE.md "CI/CD" for setup.
           CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CI_GOOGLE_SERVICE_ACCOUNT_EMAIL }}
           CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CI_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY }}
-          CHROME_SKIP_SUBMIT_REVIEW: "true"
+          CHROME_PUBLISH_TYPE: STAGED_PUBLISH
         run: npm run submit -- --chrome-zip .output/*-chrome.zip
 
       - name: Create GitHub Release
