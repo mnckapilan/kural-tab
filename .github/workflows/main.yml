@@ -29,7 +29,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Compare tag to package.json version
         env:
@@ -51,7 +51,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -64,7 +64,7 @@ jobs:
 
       # The zip `wxt zip` produced in the build job, i.e. the bytes the e2e tests ran against
       - name: Download zip artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: kural-tab-${{ github.sha }}-zip
           path: .output/
@@ -85,7 +85,7 @@ jobs:
         run: npm run submit -- --chrome-zip .output/*-chrome.zip
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           files: .output/*-chrome.zip
           fail_on_unmatched_files: true
