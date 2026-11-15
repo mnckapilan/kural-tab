@@ -3,6 +3,7 @@ import React, {
   useState,
   useContext,
   useEffect,
+  useMemo,
   type ReactNode,
 } from "react";
 import {
@@ -32,17 +33,34 @@ interface KuralProviderProps {
   children: ReactNode;
 }
 
+interface LoadedKuralData {
+  kuralData: KuralData;
+  metadataLookup: Map<number, KuralMetadataResult>;
+}
+
+const loadKuralData = async (): Promise<LoadedKuralData> => {
+  const { kuralData, metadataData } = await KuralService.fetchKuralData();
+  // metadata.json is a one-element array holding the திருக்குறள் root section
+  const metadataRoot = metadataData[0];
+  if (!metadataRoot) {
+    throw new Error("Metadata root section is missing");
+  }
+  return {
+    kuralData,
+    metadataLookup: KuralService.buildMetadataLookup(metadataRoot),
+  };
+};
+
 export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
-  const [kural, setKural] = useState<Kural | null>(null);
-  const [metadata, setMetadata] = useState<KuralMetadataResult | null>(null);
-  const [kuralData, setKuralData] = useState<KuralData | null>(null);
-  const [metadataLookup, setMetadataLookup] = useState<Map<
-    number,
-    KuralMetadataResult
-  > | null>(null);
+  const [loaded, setLoaded] = useState<LoadedKuralData | null>(null);
+  const [kuralNumber, setKuralNumber] = useState<number | null>(null);
   const [favouriteKurals, setFavouriteKurals] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  // Bumped by refreshKural() to retry a failed load.
+  const [loadAttempt, setLoadAttempt] = useState(0);
+
+  const kuralData = loaded?.kuralData ?? null;
+  const isLoading = loaded === null && error === null;
 
   useEffect(() => {
     const loadFavouriteKurals = async (): Promise<void> => {
@@ -61,58 +79,52 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
     });
   }, []);
 
-  const fetchKural = async (): Promise<void> => {
-    try {
-      setIsLoading(true);
+  // Fetch once; later randomisations reuse the loaded data. `loadAttempt`
+  // re-runs this after a failure.
+  useEffect(() => {
+    let cancelled = false;
+    loadKuralData().then(
+      (data) => {
+        if (cancelled) return;
+        setLoaded(data);
+        setKuralNumber(KuralService.getRandomKural(data.kuralData).Number);
+      },
+      (err: unknown) => {
+        if (cancelled) return;
+        console.error("Error loading Thirukkural:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to load Thirukkural",
+        );
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [loadAttempt]);
+
+  const kural = useMemo(
+    () => kuralData?.kural.find((item) => item.Number === kuralNumber) ?? null,
+    [kuralData, kuralNumber],
+  );
+  const metadata =
+    kuralNumber === null
+      ? null
+      : (loaded?.metadataLookup.get(kuralNumber) ?? null);
+
+  const refreshKural = (): void => {
+    if (kuralData) {
+      setKuralNumber(KuralService.getRandomKural(kuralData).Number);
+    } else {
+      // Nothing loaded yet: this is the "Try Again" path after a failed load.
       setError(null);
-
-      let currentKuralData = kuralData;
-      let currentMetadataLookup = metadataLookup;
-
-      if (!currentKuralData || !currentMetadataLookup) {
-        const fetched = await KuralService.fetchKuralData();
-        currentKuralData = fetched.kuralData;
-        // metadata.json is a one-element array holding the திருக்குறள் root section
-        const metadataRoot = fetched.metadataData[0];
-        if (!metadataRoot) {
-          throw new Error("Metadata root section is missing");
-        }
-        currentMetadataLookup = KuralService.buildMetadataLookup(metadataRoot);
-        setKuralData(currentKuralData);
-        setMetadataLookup(currentMetadataLookup);
-      }
-
-      const randomKural = KuralService.getRandomKural(currentKuralData);
-      setKural(randomKural);
-      setMetadata(currentMetadataLookup.get(randomKural.Number) ?? null);
-    } catch (err) {
-      console.error("Error loading Thirukkural:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to load Thirukkural",
-      );
-      setKural(null);
-      setMetadata(null);
-    } finally {
-      setIsLoading(false);
+      setLoadAttempt((n) => n + 1);
     }
   };
 
-  useEffect(() => {
-    void fetchKural();
-  }, []);
-
-  const refreshKural = (): void => {
-    void fetchKural();
-  };
-
-  const selectKuralByNumber = (kuralNumber: number): void => {
-    if (!kuralData || !metadataLookup) return;
-    const selected = kuralData.kural.find(
-      (item) => item.Number === kuralNumber,
-    );
-    if (!selected) return;
-    setKural(selected);
-    setMetadata(metadataLookup.get(kuralNumber) ?? null);
+  const selectKuralByNumber = (selected: number): void => {
+    if (kuralData?.kural.some((item) => item.Number === selected)) {
+      setKuralNumber(selected);
+    }
   };
 
   const isFavourite = (kuralNumber: number): boolean =>
