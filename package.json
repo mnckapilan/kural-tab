@@ -1,6 +1,6 @@
 {
   "name": "kural-tab",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Replace your new tab with daily Thirukkural couplets, offering timeless wisdom and reflection.",
   "engines": {
     "node": ">=24"

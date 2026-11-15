@@ -192,7 +192,7 @@ relative to the CSS file.
   pinned to commit SHAs with a trailing `# vX.Y.Z` comment; Dependabot (`.github/dependabot.yml`) keeps
   those pins current.
 
-**Releasing:** `package.json`'s `version` is the single source of truth (currently 1.0.5).
+**Releasing:** `package.json`'s `version` is the single source of truth (currently 1.0.6).
 WXT stamps it into the generated `manifest.json` (there is no manifest source file to keep in sync), so
 what ships always matches `package.json`. `npm run zip` (`wxt zip`) writes the versioned zip to `.output/`;
 CI uses the same command, so local and CI zips are built the same way. Only bump `package.json` before
