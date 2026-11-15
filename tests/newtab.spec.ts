@@ -71,7 +71,7 @@ test.describe("Kural Tab new tab page", () => {
     let attempts = 0;
     let newNumber = firstNumber;
     while (newNumber === firstNumber && attempts < 5) {
-      await page.getByRole("button", { name: "Randomize kural" }).click();
+      await page.getByRole("button", { name: "Randomise" }).click();
       await waitForKural(page);
       newNumber = await page.getByTestId("kural-number-value").textContent();
       attempts++;
@@ -164,7 +164,7 @@ test.describe("Kural Tab new tab page", () => {
     await page
       .getByRole("button", { name: /^(Add to|Remove from) favourites$/ })
       .click();
-    await page.getByRole("button", { name: "Randomize kural" }).click();
+    await page.getByRole("button", { name: "Randomise" }).click();
     await waitForKural(page);
 
     // Open favourites and click the starred kural

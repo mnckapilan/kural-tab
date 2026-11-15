@@ -85,7 +85,6 @@ function KuralDisplay() {
           variant="muted"
           size="pill"
           onClick={refreshKural}
-          aria-label="Randomize kural"
         >
           Randomise
         </Button>
