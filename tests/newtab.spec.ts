@@ -212,6 +212,37 @@ test.describe("Kural Tab new tab page", () => {
     await expect(html).toHaveAttribute("data-theme", "dark");
   });
 
+  test("light theme is applied before first paint on reload", async ({
+    context,
+    extensionId,
+  }) => {
+    const page = await context.newPage();
+    await goToNewTab(page, extensionId);
+    await waitForKural(page);
+    await page.getByLabel("Toggle dark/light mode").click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+
+    // Record <html>'s class once the <head> has run, i.e. before React (which
+    // waits on async chrome.storage) could have changed it. Without the
+    // pre-paint theme script this would still be the "dark" default.
+    await page.addInitScript(() => {
+      document.addEventListener("DOMContentLoaded", () => {
+        (window as unknown as { __initialClass: string }).__initialClass =
+          document.documentElement.className;
+      });
+    });
+    await page.reload();
+    await waitForKural(page);
+    const initialClass = await page.evaluate(
+      () => (window as unknown as { __initialClass: string }).__initialClass,
+    );
+    expect(initialClass).not.toContain("dark");
+
+    // Clean up: back to the default theme
+    await page.getByLabel("Toggle dark/light mode").click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  });
+
   test("metadata link points to correct chapter", async ({
     context,
     extensionId,

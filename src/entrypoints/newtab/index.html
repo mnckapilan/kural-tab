@@ -11,26 +11,36 @@
       content. This must stay a MINIMAL subset — just the page background and
       text colour for each theme — not a duplicate stylesheet. Keep the values
       in sync with --background/--foreground in src/styles/globals.css. The
-      default theme is dark, hence class="dark" on <html>; ThemeContext
-      toggles it afterwards. See CLAUDE.md "Styling" section.
+      default theme is dark, hence class="dark" on <html>; /theme-init.js
+      (public/) removes it before first paint if the last-used theme was
+      light, and ThemeContext takes over afterwards. See CLAUDE.md "Styling".
     -->
     <style>
       :root {
+        color-scheme: light;
         --background: #d4d4d4;
         --foreground: #1a1a1a;
       }
 
       .dark {
+        color-scheme: dark;
         --background: #1a1a1a;
         --foreground: #f2f2f2;
       }
 
+      /* On <html> too: the first paint can happen before <body> exists. */
+      html,
       body {
         background-color: var(--background);
         color: var(--foreground);
+      }
+
+      body {
         margin: 0;
       }
     </style>
+    <!-- Blocking on purpose: applies the saved theme before first paint. -->
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

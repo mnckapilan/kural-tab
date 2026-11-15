@@ -67,7 +67,7 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
   other open new-tab pages stay in sync.
 - `src/context/ThemeContext.tsx` — Owns light/dark theme (defaults to dark). Persists via `themeItem` (also `.watch()`ed
   across open tabs). Toggles the `dark` class on `<html>` (shadcn convention; light = no class) plus a
-  `data-theme="dark|light"` attribute the tests assert on, and puts a temporary `no-transition` class on
+  `data-theme="dark|light"` attribute the tests assert on, mirrors the theme into a `localStorage` copy for `public/theme-init.js` (see Styling), and puts a temporary `no-transition` class on
   `body` to prevent a flash on load. Renders nothing until storage resolves (a few ms; the inline critical CSS already paints the background).
 
 Storage items live in `src/utils/storage.ts`, defined with `@wxt-dev/storage` (`storage` from `#imports`):
@@ -144,10 +144,20 @@ components and the design tokens.
 - Chrome's built-in extension-page stylesheet sets `body { font-family: system-ui }`, which beats anything
   inside `@layer`; that's why `globals.css` has an unlayered `body { @apply font-sans; }`.
 
-To avoid a flash of unstyled content before the bundled CSS/JS loads, `src/entrypoints/newtab/index.html`
-has `class="dark"` on `<html>` (the default theme) and a small inline `<style>` with just the
-`--background`/`--foreground` values and body colours — deliberately minimal, not a duplicate stylesheet.
-If you change those tokens in `globals.css`, update the inline block too.
+To avoid a flash of unstyled content or of the wrong theme before the bundled CSS/JS loads:
+
+- `src/entrypoints/newtab/index.html` has `class="dark"` on `<html>` (the default theme) and a small inline
+  `<style>` with just the `--background`/`--foreground` values, `color-scheme`, and the `html, body`
+  background — deliberately minimal, not a duplicate stylesheet. The background is on `<html>` too because
+  Chrome can paint before `<body>` exists. If you change those tokens in `globals.css`, update the inline
+  block too.
+- `public/theme-init.js` is a blocking classic `<script>` in the `<head>` (MV3's CSP forbids inline
+  scripts). It reads a synchronous `localStorage` copy of the theme (`THEME_HINT_KEY` in
+  `src/utils/storage.ts`) and removes `dark` before first paint for light-mode users, since
+  `chrome.storage` is async and resolves after the first paint. `ThemeContext` initialises from that
+  copy and rewrites it on every theme change; `themeItem` (`sync:theme`) stays the source of truth. The
+  copy is per-device, so after a theme change synced from another device the first paint can be wrong
+  once.
 
 **Animation — Motion** (`motion`, import from `motion/react`). `src/components/MotionProvider.tsx` wraps the
 app in `LazyMotion` (`domAnimation`, `strict`) and `MotionConfig reducedMotion="user"`, so components must

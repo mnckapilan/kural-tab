@@ -41,6 +41,7 @@
  * src/entrypoints/newtab/index.html.
  */
 :root {
+  color-scheme: light;
   --background: #d4d4d4;
   --foreground: #1a1a1a;
   --quote: #333333;
@@ -65,6 +66,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: #1a1a1a;
   --foreground: #f2f2f2;
   --quote: #cccccc;
@@ -111,6 +113,13 @@
   html,
   body {
     @apply h-full;
+  }
+
+  /* The page background is on <html> as well as <body>: Chrome can paint
+     before <body> exists, and would otherwise show its default canvas
+     (white in light mode). Matches the inline critical CSS in newtab.html. */
+  html {
+    @apply bg-background;
   }
 
   body {

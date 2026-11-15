@@ -6,7 +6,7 @@ import React, {
   type ReactNode,
 } from "react";
 import { type ThemeType, THEME } from "../types/models";
-import { themeItem } from "../utils/storage";
+import { readThemeHint, themeItem, writeThemeHint } from "../utils/storage";
 
 interface ThemeContextType {
   theme: ThemeType;
@@ -20,7 +20,11 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setTheme] = useState<ThemeType>(THEME.DARK);
+  // Start from the same theme public/theme-init.js already painted, so the
+  // class effect below doesn't flip it back before storage resolves.
+  const [theme, setTheme] = useState<ThemeType>(
+    () => readThemeHint() ?? THEME.DARK,
+  );
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -57,6 +61,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     document.documentElement.dataset.theme =
       theme === THEME.LIGHT ? "light" : "dark";
     document.documentElement.classList.toggle("dark", theme === THEME.DARK);
+    writeThemeHint(theme);
   }, [theme]);
 
   const toggleTheme = (): void => {
