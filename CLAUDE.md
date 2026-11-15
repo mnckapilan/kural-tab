@@ -21,7 +21,8 @@ npm run typecheck  # tsc --noEmit (WXT/Vite strip types and never type check)
 Node version is set to 24 (latest 24.x) via `.nvmrc`; use `nvm use` before running commands.
 
 `eslint.config.mjs` is a flat config using `@eslint/js` recommended, `typescript-eslint`
-`recommendedTypeChecked`, and `eslint-plugin-react`. Formatting is Prettier (`.prettierrc.json`, default
+`recommendedTypeChecked`, `eslint-plugin-react`, and `eslint-plugin-react-hooks` (flat `recommended`,
+including the React Compiler-era rules such as `set-state-in-effect`; fix violations rather than disabling them). Formatting is Prettier (`.prettierrc.json`, default
 style) with `prettier-plugin-tailwindcss`, which sorts Tailwind classes (including inside `cn()`/`cva()`).
 CI fails on unformatted files, so run `npm run format` before committing.
 
@@ -106,12 +107,18 @@ App
                 │   ├── KuralText          (2-line Tamil couplet)
                 │   ├── KuralExplanation   (English translation)
                 │   ├── KuralMeaning       (Tamil meaning, mv field)
-                │   └── favourites         (shadcn Popover: toggle + list, owned by KuralDisplay)
+                │   └── FavouritesPopover  (shadcn Popover: toggle + list; owns its open state)
                 └── dev indicator          (only when import.meta.env.DEV)
 ```
 
-`KuralDisplay` is the only stateful component — it owns the favourites panel open/closed state and
-renders its own error state (separate from `ErrorBoundary`, which only catches thrown render errors).
+`KuralDisplay` renders its own error state (separate from `ErrorBoundary`, which only catches thrown
+render errors); `FavouritesPopover` owns the favourites panel open/closed state and reads favourites from
+`useKural()`.
+
+**Component style:** plain `function` components with typed props (no `React.FC`, no default `import React`),
+`@/` alias imports only in `src/` (no relative paths), React 19 `<SomeContext value={…}>` and `use(Context)`.
+Context values and their callbacks are memoised (`useMemo`/`useCallback`) so consumers don't re-render on
+every provider render. `ErrorBoundary` stays a class (required).
 
 **Layout coupling:** `KuralText` measures its two rendered lines in a `requestAnimationFrame` after each
 kural change and reports the max width up through `useKuralLayout` (`src/hooks/useKuralLayout.ts`).
@@ -189,7 +196,7 @@ make it relative to the CSS file.
   non-headless (set in `playwright.config.ts`); extensions don't load headless.
 - `newtab.spec.ts` — Navigates to `chrome-extension://<id>/newtab.html` and covers rendering, kural number
   range, randomise, star toggle, favourites panel, theme toggle, and metadata links. Tests locate elements
-  by role/accessible name (`getByRole("button", { name: "Randomize kural" })`) or `data-testid`
+  by role/accessible name (`getByRole("button", { name: "Randomise" })`) or `data-testid`
   (`kural-text`, `kural-number-value`, `favourites-item`, …) — never by CSS class, since Tailwind classes
   are presentational. Changing an `aria-label` or removing a `data-testid` breaks tests.
 - Favourites persist in extension `sync` storage within a run, so tests clean up after themselves by
