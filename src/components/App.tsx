@@ -21,8 +21,7 @@ function App() {
 
 function AppContent() {
   return (
-    <div className="flex min-h-screen items-center justify-center text-center leading-[normal]">
-      {/* Shrink-wrapped flex item: the couplet width is measured against it. */}
+    <div className="flex min-h-screen items-center justify-center-safe text-center leading-[normal]">
       <div>
         <ThemeToggle />
         <KuralDisplay />

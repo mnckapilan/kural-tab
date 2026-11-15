@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import { useKural } from "@/context/KuralContext";
 import KuralText from "@/components/KuralText";
 import KuralMetadata from "@/components/KuralMetadata";
@@ -6,7 +6,6 @@ import KuralExplanation from "@/components/KuralExplanation";
 import KuralMeaning from "@/components/KuralMeaning";
 import KuralSkeleton from "@/components/KuralSkeleton";
 import FavouritesPopover from "@/components/FavouritesPopover";
-import { useKuralLayout } from "@/hooks/useKuralLayout";
 import { Star } from "lucide-react";
 import { AnimatePresence, m } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,6 @@ function KuralDisplay() {
     error,
     refreshKural,
   } = useKural();
-  const { textWidth, handleLayoutChange } = useKuralLayout();
   // Bumped on each star click so the "pop" plays only on user toggles, not on navigation.
   const [starToggles, setStarToggles] = useState(0);
   const showSkeleton = useDelayedFlag(isLoading, SKELETON_DELAY_MS);
@@ -59,17 +57,11 @@ function KuralDisplay() {
     );
   }
 
-  const containerStyle =
-    textWidth > 0
-      ? ({ "--kural-text-width": `${textWidth}px` } as CSSProperties)
-      : undefined;
-
   const starred = isFavourite(kural.Number);
 
   return (
     <m.div
       className={QUOTE_CONTAINER}
-      style={containerStyle}
       variants={ENTRANCE_CONTAINER}
       initial="hidden"
       animate="show"
@@ -120,22 +112,27 @@ function KuralDisplay() {
 
       {/*
         Couplet swap: `wait` guarantees only one block (and one set of test ids)
-        exists at a time, so the new KuralText measures itself after it mounts
-        and `--kural-text-width` is only updated for the new couplet. The number
-        row above updates instantly. `initial={false}` skips the first mount,
-        which the staggered entrance already covers.
+        exists at a time. The number row above updates instantly.
+        `initial={false}` skips the first mount, which the staggered entrance
+        already covers.
+
+        `w-min` sizes this block to its min-content width. The couplet lines are
+        `whitespace-nowrap`, so that is the longer line, and the translation and
+        meaning (which can wrap) fill exactly that width. Pure CSS, so there is
+        no measurement to go stale when the font loads or the window resizes.
       */}
       <m.div variants={ENTRANCE_ITEM}>
         <AnimatePresence initial={false} mode="wait">
           <m.div
             key={kural.Number}
+            className="w-min"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0, transition: FADE_IN }}
             exit={{ opacity: 0, y: -4, transition: FADE_OUT }}
           >
             <KuralMetadata metadata={metadata} />
 
-            <KuralText kural={kural} onLayoutChanged={handleLayoutChange} />
+            <KuralText kural={kural} />
 
             <KuralExplanation explanation={kural.Translation} />
 

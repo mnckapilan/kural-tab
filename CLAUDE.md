@@ -120,13 +120,12 @@ render errors); `FavouritesPopover` owns the favourites panel open/closed state 
 Context values and their callbacks are memoised (`useMemo`/`useCallback`) so consumers don't re-render on
 every provider render. `ErrorBoundary` stays a class (required).
 
-**Layout coupling:** `KuralText` measures its two rendered lines in a `requestAnimationFrame` after each
-kural change and reports the max width up through `useKuralLayout` (`src/hooks/useKuralLayout.ts`).
-`KuralDisplay` writes that width to the `--kural-text-width` CSS custom property on the card container,
-which the translation/meaning blocks use (`w-[var(--kural-text-width,auto)]`) to align to the couplet.
-Changing the `data-testid="kural-text"` container's two-child-`div` structure will break this measurement.
-The app wrapper in `App.tsx` centres a shrink-wrapped inner `div`; that is what the width is measured
-against, so don't make it full-width.
+**Layout coupling (pure CSS):** the swapped block in `KuralDisplay` (metadata + couplet + translation + meaning)
+has `w-min` (`width: min-content`). The couplet lines in `KuralText` are `whitespace-nowrap`, so the block's
+min-content width is the longer line, and the translation/meaning wrap to exactly that width. No JS
+measurement. Don't remove `whitespace-nowrap` from the couplet lines (the block would collapse to the longest
+word), and keep the number row and favourites button outside the `w-min` block. The couplet itself never
+wraps, so on viewports narrower than the longest couplet line the page scrolls horizontally.
 
 **Styling — Tailwind CSS v4 + shadcn/ui.** Don't write hand-rolled CSS classes; use Tailwind utilities in
 components and the design tokens.
