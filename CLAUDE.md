@@ -224,9 +224,10 @@ make it relative to the CSS file.
 version>`. `upload-extension` needs all three of `build-extension`, `checks`, and `verify-version`, and
   is further gated on `startsWith(github.ref, 'refs/tags/v')`. It downloads the `-zip` artifact and runs
   `npm run submit -- --chrome-zip .output/*-chrome.zip` (`wxt submit`, i.e. `publish-browser-extension`)
-  with `CHROME_SKIP_SUBMIT_REVIEW=true`, which uploads a **draft only**. In Web Store terms "publish" means
-  submitting for Google's review, so the draft is the intentional handoff point — a human submits it for
-  review from the Chrome Web Store Developer Dashboard. It uses Chrome Web Store API v2
+  with `CHROME_PUBLISH_TYPE=STAGED_PUBLISH`, which uploads the zip **and submits it for Google's review**,
+  but leaves an approved version **staged** rather than live. That staged state is the intentional handoff
+  point: a human clicks Publish in the Chrome Web Store Developer Dashboard. If an earlier version is still
+  in review, the submit fails (`CHROME_CANCEL_PENDING` defaults to `false`). It uses Chrome Web Store API v2
   (`CHROME_API_VERSION=v2`), which in `publish-browser-extension` authenticates **only with a Google Cloud
   service account** (OAuth client ID/secret/refresh token are v1.1-only). Then it cuts a GitHub Release
   with the zip attached via the SHA-pinned `softprops/action-gh-release`. Extension ID
@@ -258,5 +259,6 @@ WXT stamps it into the generated `manifest.json` (there is no manifest source fi
 what ships always matches `package.json`. `npm run zip` (`wxt zip`) writes the versioned zip to `.output/`;
 CI uses the same command, so local and CI zips are built the same way. Only bump `package.json` before
 tagging. Publishing is tag-driven: `git tag v1.0.4 && git push origin v1.0.4`; `verify-version` fails the
-run if the tag and `package.json` disagree. The Web Store upload only produces a draft; submitting it for
-Google's review from the Developer Dashboard is a manual step and the intentional release gate.
+run if the tag and `package.json` disagree. CI submits the upload for Google's review automatically; once
+approved it sits staged, and publishing it from the Developer Dashboard is the manual, intentional release
+gate.
