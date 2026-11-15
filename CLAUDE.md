@@ -30,6 +30,7 @@ To load the extension locally: go to `chrome://extensions/`, enable Developer Mo
 select the `.output/chrome-mv3/` directory (after `npm run build`).
 
 To run a single Playwright test file:
+
 ```bash
 npx playwright test tests/newtab.spec.ts
 ```
@@ -41,6 +42,7 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
 [WXT](https://wxt.dev) (Vite-based) + TypeScript; React is wired in via `@wxt-dev/module-react`.
 
 **Entry points** (WXT `srcDir: "src"`; entrypoints are discovered by convention in `src/entrypoints/`):
+
 - `src/entrypoints/newtab/index.html` + `main.tsx` → `.output/chrome-mv3/newtab.html` — the React app,
   mounted directly into `#root` (module scripts are deferred, so no `DOMContentLoaded` listener; `main.tsx` throws if `#root` is missing). WXT maps a `newtab` entrypoint to
   `chrome_url_overrides.newtab` automatically.
@@ -56,6 +58,7 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
   `rsvg-convert -w N -h N assets/icon.svg -o public/icon/N.png`.
 
 **State management via React Context:**
+
 - `src/context/KuralContext.tsx` — Owns kural data, random selection, and favourites. Fetches once and
   caches `kuralData` + the metadata lookup map in state, so `refreshKural()` re-randomises without refetching.
   Persists favourites (sorted number array) via `favouriteKuralsItem`, and `.watch()`es it so
@@ -70,6 +73,7 @@ Storage items live in `src/utils/storage.ts`, defined with `@wxt-dev/storage` (`
 There are no `window.chrome` guards or `chrome.d.ts`; the app is only meant to run as an extension page.
 
 **Data layer:**
+
 - `src/types/models.ts` — Central module for all interfaces plus the `THEME` and `FILE_PATHS`
   constants. Prefer these constants over string literals.
 - `src/services/kuralService.ts` — Static-method class. Fetches both JSON files in parallel, validates them,
@@ -85,6 +89,7 @@ There are no `window.chrome` guards or `chrome.d.ts`; the app is only meant to r
 They live in `public/data/` (WXT's `publicDir`, copied verbatim to `.output/chrome-mv3/data/`) and are fetched at runtime (not bundled). `FILE_PATHS` uses relative `data/...` paths, which resolve against `newtab.html` at the extension root.
 
 **Component tree:**
+
 ```
 App
 └── ErrorBoundary          (class component; catches render errors, offers reload)
@@ -133,6 +138,7 @@ and `public/` is copied to the output root, so it resolves against the extension
 relative to the CSS file.
 
 **Build config:**
+
 - `wxt.config.ts` — `srcDir: "src"`, `publicDir: "public"`, the `@wxt-dev/module-react` module, and the
   `manifest` block (see above). `output` goes to `.output/chrome-mv3/` (`.output/chrome-mv3-dev/` in dev).
   `import.meta.env.DEV` replaces the old `__DEV__` define (true under `npm start`, false in builds).
@@ -141,6 +147,7 @@ relative to the CSS file.
 - `.output/` and `.wxt/` are gitignored and eslint-ignored.
 
 **Tests (`tests/`):**
+
 - `fixtures.ts` — Extends the Playwright `test` fixture to launch a persistent Chromium context with
   `--load-extension=.output/chrome-mv3`, and derives `extensionId` from the service worker URL. Tests must run
   non-headless (set in `playwright.config.ts`); extensions don't load headless.
@@ -151,6 +158,7 @@ relative to the CSS file.
   unstarring. `retries: 1` is set in the config.
 
 **CI/CD (`.github/workflows/`):**
+
 - `build.yml` — Reusable workflow (`workflow_call`, takes `artifact_name` + `retention_days`):
   checkout → Node from `.nvmrc` → `npm ci` → `npm run zip` (`wxt zip`: production build + zip) → upload
   two artifacts from that one build: `<artifact_name>` (unzipped `.output/chrome-mv3/`, used by e2e) and
@@ -163,7 +171,7 @@ relative to the CSS file.
   artifact (see the `html` reporter in `playwright.config.ts`).
 - `main.yml` — Runs on pushes to `main` and `v*.*.*` tags. Calls `build.yml` then `checks.yml`. A
   `verify-version` job (tag pushes only) fails the run if the pushed tag doesn't match `v<package.json
-  version>`. `upload-extension` needs all three of `build-extension`, `checks`, and `verify-version`, and
+version>`. `upload-extension` needs all three of `build-extension`, `checks`, and `verify-version`, and
   is further gated on `startsWith(github.ref, 'refs/tags/v')`. It downloads the `-zip` artifact and runs
   `npm run submit -- --chrome-zip .output/*-chrome.zip` (`wxt submit`, i.e. `publish-browser-extension`)
   with `CHROME_SKIP_SUBMIT_REVIEW=true`, which uploads a **draft only**. In Web Store terms "publish" means
@@ -182,8 +190,9 @@ relative to the CSS file.
      PEM, newlines intact) → `CI_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`.
   3. In the Chrome Web Store Developer Dashboard → Account, add the service account's email so it can
      manage the publisher's items.
-  To check credentials without uploading, set the same `CHROME_*` env vars locally and run
-  `npm run zip && npm run submit -- --dry-run --chrome-zip .output/*-chrome.zip`.
+     To check credentials without uploading, set the same `CHROME_*` env vars locally and run
+     `npm run zip && npm run submit -- --dry-run --chrome-zip .output/*-chrome.zip`.
+
 - `pr-comment.yml` — Also calls `build.yml` then `checks.yml`, then posts a PR comment linking the build
   artifact for manual testing via the SHA-pinned `thollander/actions-comment-pull-request`. Runs under a
   `${{ github.workflow }}-${{ github.ref }}` concurrency group with `cancel-in-progress: true`, so pushing

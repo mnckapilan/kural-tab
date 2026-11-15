@@ -5,7 +5,9 @@ interface KuralMeaningProps {
 }
 
 const KuralMeaning: React.FC<KuralMeaningProps> = ({ meaning }) => (
-  <div className="quote-mv" data-testid="kural-meaning">{meaning}</div>
+  <div className="quote-mv" data-testid="kural-meaning">
+    {meaning}
+  </div>
 );
 
 export default KuralMeaning;

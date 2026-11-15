@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 
 <html lang="en">
-<head>
-    <meta charset="utf-8">
+  <head>
+    <meta charset="utf-8" />
     <title>New Tab</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="/icon/32.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon/32.png" />
     <!--
       Critical CSS, inlined so the pre-React paint (before the bundled script loads and
       the app's src/styles/style.css is applied) isn't a flash of unstyled
@@ -14,39 +14,39 @@
       lives solely in src/styles/style.css.
     -->
     <style>
-        :root {
-            --bg-color: #1a1a1a;
-            --text-color: #f2f2f2;
-        }
+      :root {
+        --bg-color: #1a1a1a;
+        --text-color: #f2f2f2;
+      }
 
-        .light-mode {
-            --bg-color: #d4d4d4;
-            --text-color: #1a1a1a;
-        }
+      .light-mode {
+        --bg-color: #d4d4d4;
+        --text-color: #1a1a1a;
+      }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: "Helvetica Neue", Arial, sans-serif;
-            font-weight: 300;
-            font-size: 18px;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+      body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        font-weight: 300;
+        font-size: 18px;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
 
-        body.no-transition,
-        body.no-transition * {
-            transition: none !important;
-        }
+      body.no-transition,
+      body.no-transition * {
+        transition: none !important;
+      }
     </style>
-</head>
-<body class="dark-mode">
+  </head>
+  <body class="dark-mode">
     <div id="root"></div>
     <script type="module" src="./main.tsx"></script>
-</body>
+  </body>
 </html>

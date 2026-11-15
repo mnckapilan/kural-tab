@@ -47,9 +47,10 @@ const KuralDisplay: React.FC = () => {
     );
   }
 
-  const containerStyle = textWidth > 0
-    ? ({ "--kural-text-width": `${textWidth}px` } as React.CSSProperties)
-    : undefined;
+  const containerStyle =
+    textWidth > 0
+      ? ({ "--kural-text-width": `${textWidth}px` } as React.CSSProperties)
+      : undefined;
 
   return (
     <div className="quote-container" style={containerStyle}>
@@ -109,7 +110,11 @@ const KuralDisplay: React.FC = () => {
               <div className="favourites-empty">No favourites yet.</div>
             )}
             {favouriteItems.map((item) => (
-              <div key={item.Number} className="favourites-item" data-testid="favourites-item">
+              <div
+                key={item.Number}
+                className="favourites-item"
+                data-testid="favourites-item"
+              >
                 <button
                   type="button"
                   className="favourites-select"

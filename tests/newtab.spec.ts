@@ -45,7 +45,9 @@ test.describe("Kural Tab new tab page", () => {
     await goToNewTab(page, extensionId);
     await waitForKural(page);
 
-    const numberText = await page.getByTestId("kural-number-value").textContent();
+    const numberText = await page
+      .getByTestId("kural-number-value")
+      .textContent();
     const num = parseInt(numberText ?? "0", 10);
     expect(num).toBeGreaterThanOrEqual(1);
     expect(num).toBeLessThanOrEqual(1330);
@@ -59,7 +61,9 @@ test.describe("Kural Tab new tab page", () => {
     await goToNewTab(page, extensionId);
     await waitForKural(page);
 
-    const firstNumber = await page.getByTestId("kural-number-value").textContent();
+    const firstNumber = await page
+      .getByTestId("kural-number-value")
+      .textContent();
 
     // Click randomise and wait for re-render — retry a few times if we hit
     // the same kural by chance (1/1330 probability per attempt)
@@ -84,7 +88,9 @@ test.describe("Kural Tab new tab page", () => {
     await goToNewTab(page, extensionId);
     await waitForKural(page);
 
-    const starBtn = page.getByRole("button", { name: /^(Add to|Remove from) favourites$/ });
+    const starBtn = page.getByRole("button", {
+      name: /^(Add to|Remove from) favourites$/,
+    });
 
     // Initially not starred
     await expect(starBtn).toHaveAttribute("aria-pressed", "false");
@@ -106,13 +112,17 @@ test.describe("Kural Tab new tab page", () => {
     await goToNewTab(page, extensionId);
     await waitForKural(page);
 
-    const favouritesBtn = page.getByRole("button", { name: /^(See|Hide) Favourites$/ });
+    const favouritesBtn = page.getByRole("button", {
+      name: /^(See|Hide) Favourites$/,
+    });
 
     // Button is disabled when no favourites
     await expect(favouritesBtn).toBeDisabled();
 
     // Favourite the current kural
-    await page.getByRole("button", { name: /^(Add to|Remove from) favourites$/ }).click();
+    await page
+      .getByRole("button", { name: /^(Add to|Remove from) favourites$/ })
+      .click();
 
     // Button should now be enabled
     await expect(favouritesBtn).toBeEnabled();
@@ -138,25 +148,37 @@ test.describe("Kural Tab new tab page", () => {
     await goToNewTab(page, extensionId);
     await waitForKural(page);
 
-    const currentNumber = await page.getByTestId("kural-number-value").textContent();
+    const currentNumber = await page
+      .getByTestId("kural-number-value")
+      .textContent();
 
     // Star current kural, then randomise to get a different one
-    await page.getByRole("button", { name: /^(Add to|Remove from) favourites$/ }).click();
+    await page
+      .getByRole("button", { name: /^(Add to|Remove from) favourites$/ })
+      .click();
     await page.getByRole("button", { name: "Randomize kural" }).click();
     await waitForKural(page);
 
     // Open favourites and click the starred kural
     await page.getByRole("button", { name: /^(See|Hide) Favourites$/ }).click();
     await expect(page.getByTestId("favourites-list")).toBeVisible();
-    await page.getByTestId("favourites-item").getByRole("button").first().click();
+    await page
+      .getByTestId("favourites-item")
+      .getByRole("button")
+      .first()
+      .click();
     await waitForKural(page);
 
     // Should have navigated back to the originally starred kural
-    const shownNumber = await page.getByTestId("kural-number-value").textContent();
+    const shownNumber = await page
+      .getByTestId("kural-number-value")
+      .textContent();
     expect(shownNumber).toBe(currentNumber);
 
     // Clean up
-    await page.getByRole("button", { name: /^(Add to|Remove from) favourites$/ }).click();
+    await page
+      .getByRole("button", { name: /^(Add to|Remove from) favourites$/ })
+      .click();
   });
 
   test("theme toggle switches between dark and light mode", async ({

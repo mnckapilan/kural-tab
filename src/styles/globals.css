@@ -114,7 +114,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans font-light;
+    @apply bg-background font-sans font-light text-foreground;
     font-size: 18px;
     transition:
       background-color 0.3s ease,
