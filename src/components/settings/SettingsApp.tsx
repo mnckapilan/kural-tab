@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BookOpen, Info, Palette, type LucideIcon } from "lucide-react";
 import { AppearanceProvider } from "@/context/AppearanceContext";
+import { ContentProvider } from "@/context/ContentContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import MotionProvider from "@/components/MotionProvider";
@@ -52,7 +53,9 @@ function SettingsApp() {
       <MotionProvider>
         <ThemeProvider>
           <AppearanceProvider>
-            <SettingsPage />
+            <ContentProvider>
+              <SettingsPage />
+            </ContentProvider>
           </AppearanceProvider>
         </ThemeProvider>
       </MotionProvider>

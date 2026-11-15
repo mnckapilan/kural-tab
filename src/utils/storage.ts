@@ -1,11 +1,12 @@
 import { storage } from "#imports";
-import type { Appearance, ThemeType } from "@/types/models";
+import type { Appearance, ContentPreferences, ThemeType } from "@/types/models";
 import {
   DEFAULT_APPEARANCE,
   normaliseAppearance,
   normaliseTheme,
   paletteColours,
 } from "@/utils/appearance";
+import { DEFAULT_CONTENT } from "@/utils/content";
 import { THEME } from "@/types/models";
 
 // Typed storage items. The keys (`theme`, `favouriteKurals`) and the `sync`
@@ -24,6 +25,16 @@ export const themeItem = storage.defineItem<ThemeType>("sync:theme", {
 export const appearanceItem = storage.defineItem<Appearance>(
   "sync:appearance",
   { fallback: DEFAULT_APPEARANCE, version: 1 },
+);
+
+/**
+ * What the new tab shows with each kural, and which chapters are hidden.
+ * Stored values are untrusted: pass them through normaliseContent
+ * (utils/content.ts) before use.
+ */
+export const contentItem = storage.defineItem<ContentPreferences>(
+  "sync:content",
+  { fallback: DEFAULT_CONTENT, version: 1 },
 );
 
 export const favouriteKuralsItem = storage.defineItem<number[]>(

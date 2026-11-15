@@ -1,9 +1,9 @@
 // kuralService.ts - Service for fetching and processing Kural data
 
 import {
-  type Kural,
   type KuralData,
   type MetadataSection,
+  type Section,
   type KuralMetadataResult,
   FILE_PATHS,
 } from "@/types/models";
@@ -71,15 +71,34 @@ export class KuralService {
   }
 
   /**
-   * Selects a random Kural from the data
+   * Fetches only the section → இயல் → chapter hierarchy (used by the settings page).
+   * @throws KuralDataError if the fetch fails or the file is empty
    */
-  public static getRandomKural(kuralData: KuralData): Kural {
-    const randomIndex = Math.floor(Math.random() * kuralData.kural.length);
-    const kural = kuralData.kural[randomIndex];
-    if (!kural) {
-      throw new KuralDataError("Kural data is empty");
+  public static async fetchSections(): Promise<ReadonlyArray<Section>> {
+    try {
+      const response = await fetch(FILE_PATHS.METADATA);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch metadata: ${response.status}`);
+      }
+      const data = (await response.json()) as MetadataSection[];
+      const sections = data[0]?.section.detail;
+      if (!sections?.length) {
+        throw new Error("Invalid or empty metadata received");
+      }
+      return sections;
+    } catch (error) {
+      throw new KuralDataError(
+        error instanceof Error
+          ? `Error fetching metadata: ${error.message}`
+          : "Unknown error fetching metadata",
+        error,
+      );
     }
-    return kural;
+  }
+
+  /** Picks a random entry of `pool`, or null if it is empty. */
+  public static pickRandom(pool: ReadonlyArray<number>): number | null {
+    return pool[Math.floor(Math.random() * pool.length)] ?? null;
   }
 
   /**

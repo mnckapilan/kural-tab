@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useContent } from "@/context/ContentContext";
 import { useKural } from "@/context/KuralContext";
 import KuralText from "@/components/KuralText";
 import KuralMetadata from "@/components/KuralMetadata";
@@ -19,6 +20,8 @@ import {
   FADE_OUT,
   SKELETON_DELAY_MS,
 } from "@/lib/motion";
+import HiddenKuralNotice from "@/components/HiddenKuralNotice";
+import OpenSettingsButton from "@/components/OpenSettingsButton";
 import { useDelayedFlag } from "@/hooks/useDelayedFlag";
 
 function KuralDisplay() {
@@ -29,8 +32,11 @@ function KuralDisplay() {
     toggleFavourite,
     isLoading,
     error,
+    allHidden,
+    isCurrentHidden,
     refreshKural,
   } = useKural();
+  const { content } = useContent();
   // Bumped on each star click so the "pop" plays only on user toggles, not on navigation.
   const [starToggles, setStarToggles] = useState(0);
   const showSkeleton = useDelayedFlag(isLoading, SKELETON_DELAY_MS);
@@ -39,6 +45,18 @@ function KuralDisplay() {
   // kural in; the skeleton only appears if loading is genuinely slow.
   if (isLoading) {
     return showSkeleton ? <KuralSkeleton /> : null;
+  }
+
+  if (!error && allHidden) {
+    return (
+      <div
+        className="flex flex-col items-center gap-3 text-quote"
+        data-testid="kural-all-hidden"
+      >
+        <div>All kurals are hidden by your settings</div>
+        <OpenSettingsButton />
+      </div>
+    );
   }
 
   if (error || !kural) {
@@ -124,21 +142,34 @@ function KuralDisplay() {
       */}
       <m.div variants={ENTRANCE_ITEM}>
         <AnimatePresence initial={false} mode="wait">
-          <m.div
-            key={kural.Number}
-            className="w-min"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0, transition: FADE_IN }}
-            exit={{ opacity: 0, y: -4, transition: FADE_OUT }}
-          >
-            <KuralMetadata metadata={metadata} />
+          {isCurrentHidden ? (
+            <m.div
+              key="hidden-notice"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0, transition: FADE_IN }}
+              exit={{ opacity: 0, y: -4, transition: FADE_OUT }}
+            >
+              <HiddenKuralNotice />
+            </m.div>
+          ) : (
+            <m.div
+              key={kural.Number}
+              className="w-min"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0, transition: FADE_IN }}
+              exit={{ opacity: 0, y: -4, transition: FADE_OUT }}
+            >
+              {content.showMetadata && <KuralMetadata metadata={metadata} />}
 
-            <KuralText kural={kural} />
+              <KuralText kural={kural} />
 
-            <KuralExplanation explanation={kural.Translation} />
+              {content.showTranslation && (
+                <KuralExplanation explanation={kural.Translation} />
+              )}
 
-            <KuralMeaning meaning={kural.mv} />
-          </m.div>
+              {content.showMeaning && <KuralMeaning meaning={kural.mv} />}
+            </m.div>
+          )}
         </AnimatePresence>
       </m.div>
 

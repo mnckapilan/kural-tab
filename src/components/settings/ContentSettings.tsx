@@ -1,12 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { Collapsible as CollapsiblePrimitive } from "radix-ui";
-import {
-  FILE_PATHS,
-  type Chapter,
-  type MetadataSection,
-  type Section,
-} from "@/types/models";
+import { useContent } from "@/context/ContentContext";
+import { KuralService } from "@/services/kuralService";
+import type { Chapter, Section } from "@/types/models";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -24,24 +21,49 @@ const chaptersOf = (groups: Section["chapterGroup"]["detail"]): Chapter[] =>
 const kuralCount = (chapters: ReadonlyArray<Chapter>) =>
   chapters.reduce((n, c) => n + (c.end - c.start + 1), 0);
 
-// PROTOTYPE: hidden chapters and display toggles are local state only.
+const LOVE_SECTION_NUMBER = 3;
+
 function ContentSettings() {
+  const {
+    content,
+    setShowTranslation,
+    setShowMeaning,
+    setShowMetadata,
+    setHiddenChapters,
+  } = useContent();
   const [sections, setSections] = useState<ReadonlyArray<Section>>([]);
-  const [hidden, setHidden] = useState<ReadonlySet<number>>(new Set());
-  const [showTranslation, setShowTranslation] = useState(true);
-  const [showMeaning, setShowMeaning] = useState(true);
-  const [showMetadata, setShowMetadata] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const [blocked, setBlocked] = useState(false);
 
   useEffect(() => {
-    void fetch(FILE_PATHS.METADATA)
-      .then((r) => r.json() as Promise<MetadataSection[]>)
-      .then((data) => setSections(data[0]?.section.detail ?? []));
-  }, []);
+    let cancelled = false;
+    KuralService.fetchSections().then(
+      (data) => {
+        if (!cancelled) setSections(data);
+      },
+      (error: unknown) => {
+        if (cancelled) return;
+        console.error("Error loading chapters:", error);
+        setLoadError(
+          error instanceof Error ? error.message : "Failed to load chapters",
+        );
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [attempt]);
 
+  const hidden = useMemo(
+    () => new Set(content.hiddenChapters),
+    [content.hiddenChapters],
+  );
   const allChapters = useMemo(
     () => sections.flatMap((s) => chaptersOf(s.chapterGroup.detail)),
     [sections],
   );
+  const totalKurals = kuralCount(allChapters);
   const visibleKurals = kuralCount(
     allChapters.filter((c) => !hidden.has(c.number)),
   );
@@ -53,19 +75,24 @@ function ContentSettings() {
     return "indeterminate";
   };
 
+  // Applies a change unless it would leave nothing to show.
   const setVisible = (chapters: ReadonlyArray<Chapter>, visible: boolean) => {
-    setHidden((prev) => {
-      const next = new Set(prev);
-      for (const c of chapters) {
-        if (visible) next.delete(c.number);
-        else next.add(c.number);
-      }
-      return next;
-    });
+    const next = new Set(hidden);
+    for (const c of chapters) {
+      if (visible) next.delete(c.number);
+      else next.add(c.number);
+    }
+    if (allChapters.every((c) => next.has(c.number))) {
+      setBlocked(true);
+      return;
+    }
+    setBlocked(false);
+    setHiddenChapters([...next]);
   };
 
-  const love = sections.find((s) => s.number === 3);
+  const love = sections.find((s) => s.number === LOVE_SECTION_NUMBER);
   const loveChapters = love ? chaptersOf(love.chapterGroup.detail) : [];
+  const loveHidden = love !== undefined && stateOf(loveChapters) === false;
 
   return (
     <div>
@@ -75,21 +102,21 @@ function ContentSettings() {
       >
         <SettingsRow label="English translation">
           <Switch
-            checked={showTranslation}
+            checked={content.showTranslation}
             onCheckedChange={setShowTranslation}
             aria-label="Show English translation"
           />
         </SettingsRow>
         <SettingsRow label="Tamil meaning" description="மு. வரதராசனார் உரை">
           <Switch
-            checked={showMeaning}
+            checked={content.showMeaning}
             onCheckedChange={setShowMeaning}
             aria-label="Show Tamil meaning"
           />
         </SettingsRow>
         <SettingsRow label="Section and chapter">
           <Switch
-            checked={showMetadata}
+            checked={content.showMetadata}
             onCheckedChange={setShowMetadata}
             aria-label="Show section and chapter"
           />
@@ -103,8 +130,8 @@ function ContentSettings() {
               Kurals to show
             </h2>
             <p className="text-sm text-muted-foreground">
-              Hidden chapters are skipped when you randomise, and can&apos;t be
-              opened by number.
+              Hidden chapters are skipped when you randomise. Opening one by
+              number shows a notice instead.
             </p>
           </div>
           <div className="flex gap-2">
@@ -112,6 +139,7 @@ function ContentSettings() {
               <Button
                 variant="muted"
                 size="md"
+                disabled={loveHidden}
                 onClick={() => setVisible(loveChapters, false)}
               >
                 Hide {love.translation} ({love.name})
@@ -120,64 +148,97 @@ function ContentSettings() {
             <Button
               variant="muted"
               size="md"
-              onClick={() => setHidden(new Set())}
+              disabled={hidden.size === 0}
+              onClick={() => {
+                setBlocked(false);
+                setHiddenChapters([]);
+              }}
             >
               Show all
             </Button>
           </div>
         </div>
 
-        <div className="mb-3 text-sm text-muted-foreground" aria-live="polite">
-          Showing{" "}
-          <span className="text-foreground">
-            {visibleKurals.toLocaleString()}
-          </span>{" "}
-          of 1,330 kurals
+        <div role="status" className="mb-3 text-sm text-muted-foreground">
+          {sections.length > 0 && (
+            <>
+              Showing{" "}
+              <span className="text-foreground">
+                {visibleKurals.toLocaleString()}
+              </span>{" "}
+              of {totalKurals.toLocaleString()} kurals
+            </>
+          )}
+          {blocked && (
+            <div className="mt-1 text-destructive">
+              At least one chapter must stay visible
+            </div>
+          )}
         </div>
 
-        <div className="divide-y divide-border/40 rounded-xl border border-border/40">
-          {sections.map((section) => {
-            const chapters = chaptersOf(section.chapterGroup.detail);
-            return (
-              <TreeNode
-                key={section.number}
-                level={0}
-                tamil={section.name}
-                english={section.translation}
-                meta={`${chapters.length} chapters · ${kuralCount(chapters)} kurals`}
-                state={stateOf(chapters)}
-                onChange={(v) => setVisible(chapters, v)}
-              >
-                {section.chapterGroup.detail.map((group) => {
-                  const groupChapters = group.chapters.detail;
-                  return (
-                    <TreeNode
-                      key={group.number}
-                      level={1}
-                      tamil={group.name}
-                      english={group.translation}
-                      meta={`${groupChapters.length} ${groupChapters.length === 1 ? "chapter" : "chapters"}`}
-                      state={stateOf(groupChapters)}
-                      onChange={(v) => setVisible(groupChapters, v)}
-                    >
-                      {groupChapters.map((chapter) => (
-                        <TreeNode
-                          key={chapter.number}
-                          level={2}
-                          tamil={chapter.name}
-                          english={chapter.translation}
-                          meta={`${chapter.start}–${chapter.end}`}
-                          state={!hidden.has(chapter.number)}
-                          onChange={(v) => setVisible([chapter], v)}
-                        />
-                      ))}
-                    </TreeNode>
-                  );
-                })}
-              </TreeNode>
-            );
-          })}
-        </div>
+        {loadError ? (
+          <div className="flex flex-col items-start gap-3 rounded-xl border border-border/40 p-5 text-sm text-muted-foreground">
+            <div>Couldn&apos;t load the chapter list. {loadError}</div>
+            <Button
+              variant="muted"
+              size="md"
+              onClick={() => {
+                setLoadError(null);
+                setAttempt((n) => n + 1);
+              }}
+            >
+              Try Again
+            </Button>
+          </div>
+        ) : sections.length === 0 ? (
+          <div className="rounded-xl border border-border/40 p-5 text-sm text-muted-foreground">
+            Loading chapters…
+          </div>
+        ) : (
+          <div className="divide-y divide-border/40 rounded-xl border border-border/40">
+            {sections.map((section) => {
+              const chapters = chaptersOf(section.chapterGroup.detail);
+              return (
+                <TreeNode
+                  key={section.number}
+                  level={0}
+                  tamil={section.name}
+                  english={section.translation}
+                  meta={`${chapters.length} chapters · ${kuralCount(chapters)} kurals`}
+                  state={stateOf(chapters)}
+                  onChange={(v) => setVisible(chapters, v)}
+                >
+                  {section.chapterGroup.detail.map((group) => {
+                    const groupChapters = group.chapters.detail;
+                    return (
+                      <TreeNode
+                        key={group.number}
+                        level={1}
+                        tamil={group.name}
+                        english={group.translation}
+                        meta={`${groupChapters.length} ${groupChapters.length === 1 ? "chapter" : "chapters"}`}
+                        state={stateOf(groupChapters)}
+                        onChange={(v) => setVisible(groupChapters, v)}
+                      >
+                        {groupChapters.map((chapter) => (
+                          <TreeNode
+                            key={chapter.number}
+                            level={2}
+                            tamil={chapter.name}
+                            english={chapter.translation}
+                            meta={`${chapter.start}–${chapter.end}`}
+                            state={!hidden.has(chapter.number)}
+                            onChange={(v) => setVisible([chapter], v)}
+                          />
+                        ))}
+                      </TreeNode>
+                    );
+                  })}
+                </TreeNode>
+              );
+            })}
+          </div>
+        )}
       </section>
     </div>
   );

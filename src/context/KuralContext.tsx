@@ -12,6 +12,7 @@ import {
   type KuralData,
   type KuralMetadataResult,
 } from "@/types/models";
+import { useContent } from "@/context/ContentContext";
 import { KuralService } from "@/services/kuralService";
 import { favouriteKuralsItem } from "@/utils/storage";
 
@@ -22,6 +23,12 @@ interface KuralContextType {
   favouriteKurals: number[];
   isLoading: boolean;
   error: string | null;
+  /** True once data has loaded but the user's settings hide every kural. */
+  allHidden: boolean;
+  /** True when the current kural is in a chapter the user has hidden. */
+  isCurrentHidden: boolean;
+  /** Whether the given kural's chapter is hidden by the user's settings. */
+  isKuralHidden: (kuralNumber: number) => boolean;
   refreshKural: () => void;
   toggleFavourite: (kuralNumber: number) => void;
   isFavourite: (kuralNumber: number) => boolean;
@@ -69,9 +76,31 @@ export function KuralProvider({ children }: KuralProviderProps) {
   const [error, setError] = useState<string | null>(null);
   // Bumped by refreshKural() to retry a failed load.
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const { content, isReady: contentReady } = useContent();
+  const { hiddenChapters } = content;
 
   const kuralData = loaded?.kuralData ?? null;
-  const isLoading = loaded === null && error === null;
+  const isLoading = (loaded === null && error === null) || !contentReady;
+
+  const isKuralHidden = useCallback(
+    (num: number): boolean => {
+      const chapter = loaded?.metadataLookup.get(num)?.chapter.number;
+      return chapter !== undefined && hiddenChapters.includes(chapter);
+    },
+    [loaded, hiddenChapters],
+  );
+
+  // Numbers of the kurals Randomise may pick: those whose chapter isn't hidden.
+  const visiblePool = useMemo((): number[] => {
+    if (!loaded) return [];
+    const hidden = new Set(hiddenChapters);
+    return loaded.kuralData.kural
+      .filter((item) => {
+        const chapter = loaded.metadataLookup.get(item.Number)?.chapter.number;
+        return chapter === undefined || !hidden.has(chapter);
+      })
+      .map((item) => item.Number);
+  }, [loaded, hiddenChapters]);
 
   useEffect(() => {
     const loadFavouriteKurals = async (): Promise<void> => {
@@ -98,14 +127,6 @@ export function KuralProvider({ children }: KuralProviderProps) {
       (data) => {
         if (cancelled) return;
         setLoaded(data);
-        // A `newtab.html#42` deep link (or a reload) shows that kural;
-        // otherwise pick a random one.
-        const fromHash = kuralNumberFromHash(window.location.hash);
-        setKuralNumber(
-          hasKural(data.kuralData, fromHash)
-            ? fromHash
-            : KuralService.getRandomKural(data.kuralData).Number,
-        );
       },
       (err: unknown) => {
         if (cancelled) return;
@@ -119,6 +140,20 @@ export function KuralProvider({ children }: KuralProviderProps) {
       cancelled = true;
     };
   }, [loadAttempt]);
+
+  // Initial pick, once both the data and the content settings are loaded (so a
+  // hidden chapter is never picked). A `newtab.html#42` deep link (or a reload)
+  // shows that kural even if hidden (the view then shows a notice); otherwise
+  // pick a random visible one. With nothing visible there is nothing to pick,
+  // and this runs again when settings make something visible. State is
+  // adjusted during render (not in an effect) to avoid a wasted paint.
+  if (loaded && contentReady && kuralNumber === null) {
+    const fromHash = kuralNumberFromHash(window.location.hash);
+    const initial = hasKural(loaded.kuralData, fromHash)
+      ? fromHash
+      : KuralService.pickRandom(visiblePool);
+    if (initial !== null) setKuralNumber(initial);
+  }
 
   // Mirror the current kural into the URL so reloads keep it and the link can
   // be shared. replaceState, not pushState: randomising shouldn't fill the
@@ -155,13 +190,14 @@ export function KuralProvider({ children }: KuralProviderProps) {
 
   const refreshKural = useCallback((): void => {
     if (kuralData) {
-      setKuralNumber(KuralService.getRandomKural(kuralData).Number);
+      const random = KuralService.pickRandom(visiblePool);
+      if (random !== null) setKuralNumber(random);
     } else {
       // Nothing loaded yet: this is the "Try Again" path after a failed load.
       setError(null);
       setLoadAttempt((n) => n + 1);
     }
-  }, [kuralData]);
+  }, [kuralData, visiblePool]);
 
   const selectKuralByNumber = useCallback(
     (selected: number): boolean => {
@@ -171,6 +207,9 @@ export function KuralProvider({ children }: KuralProviderProps) {
     },
     [kuralData],
   );
+
+  const allHidden = loaded !== null && contentReady && visiblePool.length === 0;
+  const isCurrentHidden = kuralNumber !== null && isKuralHidden(kuralNumber);
 
   const isFavourite = useCallback(
     (num: number): boolean => favouriteKurals.includes(num),
@@ -200,6 +239,9 @@ export function KuralProvider({ children }: KuralProviderProps) {
       favouriteKurals,
       isLoading,
       error,
+      allHidden,
+      isCurrentHidden,
+      isKuralHidden,
       refreshKural,
       toggleFavourite,
       isFavourite,
@@ -212,6 +254,9 @@ export function KuralProvider({ children }: KuralProviderProps) {
       favouriteKurals,
       isLoading,
       error,
+      allHidden,
+      isCurrentHidden,
+      isKuralHidden,
       refreshKural,
       toggleFavourite,
       isFavourite,

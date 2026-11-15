@@ -74,6 +74,20 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
   (`newtab.html#42`, via `history.replaceState` so randomising doesn't add back-history entries): on load a
   valid hash picks the kural (deep links, reloads), an invalid or missing one falls back to random, and a
   `hashchange` listener follows manual edits. `selectKuralByNumber()` returns `false` for unknown numbers.
+  **Filtering:** it reads `hiddenChapters` from `ContentContext` and builds a memoised `visiblePool` (kural numbers whose
+  chapter, via the metadata lookup, isn't hidden). Randomise and the initial pick choose only from that pool, and the
+  initial pick waits until both the data and the content settings have loaded (adjusted during render, since the
+  `set-state-in-effect` lint rule forbids an effect). A kural reached directly (`#42`, jump-to-number, a favourite) is
+  shown even if hidden: the hash stays `#<n>`, the number row stays, and `isCurrentHidden` makes `KuralDisplay` render
+  `HiddenKuralNotice` instead of the couplet block (live: changing settings flips it). If the pool is empty
+  (`allHidden`) and nothing is selected, `KuralDisplay` shows "All kurals are hidden by your settings" +
+  "Open settings" (`data-testid="kural-all-hidden"`; unreachable through the settings UI, which forbids it, but possible
+  via hand-edited or synced storage). `isKuralHidden(n)` is also used by the favourites list.
+- `src/context/ContentContext.tsx` — `ContentProvider`/`useContent()`, used by both the new tab `App` (outside
+  `KuralProvider`) and `SettingsApp`. Owns `ContentPreferences` (`showTranslation`, `showMeaning`, `showMetadata`,
+  `hiddenChapters`), persisted via `contentItem` and `.watch()`ed so changes made in the settings tab apply live to
+  open new tabs. Has no localStorage hint (nothing here affects first paint); `isReady` flips once storage has been
+  read and `KuralContext` treats the page as loading until then. Setters save immediately and are memoised.
 - `src/context/ThemeContext.tsx` — Owns the theme **preference** (`light` | `dark` | `system`, defaults to dark) and the
   **resolved** theme (`theme`, always light or dark). `system` follows `prefers-color-scheme` live
   (`useSyncExternalStore` over `matchMedia`). Persists the preference via `themeItem` (also `.watch()`ed
@@ -89,10 +103,12 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
 
 Storage items live in `src/utils/storage.ts`, defined with `@wxt-dev/storage` (`storage` from `#imports`):
 `themeItem` (`sync:theme`, fallback `THEME.DARK`; now also accepts `"system"`), `appearanceItem`
-(`sync:appearance`, `version: 1`, full-object fallback `DEFAULT_APPEARANCE`) and `favouriteKuralsItem`
+(`sync:appearance`, `version: 1`, full-object fallback `DEFAULT_APPEARANCE`), `contentItem` (`sync:content`,
+`version: 1`, `DEFAULT_CONTENT`: all switches on, `hiddenChapters: []`) and `favouriteKuralsItem`
 (`sync:favouriteKurals`, fallback `[]`). The keys and `sync` area of the first and last are unchanged from the pre-WXT code, so existing users' data carries over.
 Stored values are untrusted: always pass them through `normaliseTheme` / `normaliseAppearance`
-(`src/utils/appearance.ts`), which merge field by field over the defaults, so partial or invalid data never breaks the page. To change the
+(`src/utils/appearance.ts`) / `normaliseContent` (`src/utils/content.ts`; keeps only integer chapter numbers 1-133, sorted
+and de-duplicated; chapters are the only hiding granularity, sections and இயல் states are derived), which merge field by field over the defaults, so partial or invalid data never breaks the page. To change the
 shape later, bump `version` and add `migrations` to `appearanceItem`.
 There are no `window.chrome` guards or `chrome.d.ts`; the app is only meant to run as an extension page.
 
@@ -120,24 +136,30 @@ They live in `public/data/` (WXT's `publicDir`, copied verbatim to `.output/chro
 App
 └── ErrorBoundary          (class component; catches render errors, offers reload)
     └── ThemeProvider
-        └── KuralProvider
-            └── AppContent
+        └── ContentProvider
+            └── KuralProvider
+                └── AppContent
                 ├── SettingsButton     (gear → options page)
                 ├── ThemeToggle
                 ├── KuralDisplay
                 │   ├── KuralSkeleton      (only if loading takes > SKELETON_DELAY_MS)
                 │   ├── number row         (KuralNumberJump + Randomise + star buttons)
-                │   ├── KuralMetadata      (section + chapter; links to thirukkural.gokulnath.com)
-                │   ├── KuralText          (2-line Tamil couplet)
-                │   ├── KuralExplanation   (English translation)
-                │   ├── KuralMeaning       (Tamil meaning, mv field)
+                │   ├── HiddenKuralNotice  (replaces the block below when the current kural is hidden)
+                │   ├── KuralMetadata      (section + chapter; links to thirukkural.gokulnath.com; `showMetadata`)
+                │   ├── KuralText          (2-line Tamil couplet; always shown)
+                │   ├── KuralExplanation   (English translation; `showTranslation`)
+                │   ├── KuralMeaning       (Tamil meaning, mv field; `showMeaning`)
                 │   └── FavouritesPopover  (shadcn Popover: toggle + list; owns its open state)
                 └── dev indicator          (only when import.meta.env.DEV)
 ```
 
 The settings page tree is `SettingsApp > ErrorBoundary > MotionProvider > ThemeProvider > AppearanceProvider >
-SettingsPage` (sidebar + `AppearanceSettings` / `ContentSettings` / `AboutSettings`, laid out with `SettingsGroup`/`SettingsRow`).
-`ContentSettings` is still a local-state prototype (not wired to storage yet). `AppearanceSettings` has a live preview (plain app
+ContentProvider > SettingsPage` (sidebar + `AppearanceSettings` / `ContentSettings` / `AboutSettings`, laid out with `SettingsGroup`/`SettingsRow`).
+`ContentSettings` is wired to `useContent()`: three switches ("Show English translation", "Show Tamil meaning",
+"Show section and chapter") and a section → இயல் → chapter checkbox tree (tri-state parents, `aria-label` "Show <english> (<tamil>)").
+The hierarchy comes from `KuralService.fetchSections()` (with loading and "Try Again" states). "Hide Love" is disabled once Love is
+fully hidden, "Show all" when nothing is hidden, and any change that would hide every chapter is rejected with an inline
+"At least one chapter must stay visible" message in the `role="status"` region (cleared by the next successful change). `AppearanceSettings` has a live preview (plain app
 classes, so it reflects the settings applied to `<html>`), colour mode, background swatches (+ Custom with a colour input and hex
 field per mode; invalid hex shows `aria-invalid` and isn't saved), text size, the Tamil font grid and "Reset appearance".
 
@@ -263,6 +285,11 @@ make it relative to the CSS file.
   `page.emulateMedia`), palettes, custom hex (valid/invalid), font, size, reset, and live propagation to other open pages. Note
   Radix single `ToggleGroup`s are `role="radiogroup"` with `radio` items (not `group`). `playwright.config.ts` sets
   `actionTimeout: 10000` so a locator that never matches fails fast. An `afterEach` resets appearance and theme.
+- `content.spec.ts` — Content settings end to end: each display switch hides/shows its element on an already-open new tab, hiding
+  Love keeps 40 randomises within 1-1080, a `#1100` deep link and jump-to-number show `kural-hidden-notice` (whose Randomise
+  lands on a visible kural; scope it to the notice, since the number row has a Randomise button too), hidden favourites carry a
+  "Hidden" label, hiding every section is blocked, and hiding the current kural's chapter flips an open tab to the notice live.
+  Each test gets a fresh profile, so no storage cleanup is needed.
 - `newtab.spec.ts` — Navigates to `chrome-extension://<id>/newtab.html` and covers rendering, kural number
   range, randomise, star toggle, favourites panel, theme toggle, metadata links, URL-hash deep links, and
   jump-to-number. Tests locate elements

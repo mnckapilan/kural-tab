@@ -1,5 +1,6 @@
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AppearanceProvider } from "@/context/AppearanceContext";
+import { ContentProvider } from "@/context/ContentContext";
 import { KuralProvider } from "@/context/KuralContext";
 import ThemeToggle from "@/components/ThemeToggle";
 import SettingsButton from "@/components/SettingsButton";
@@ -13,9 +14,11 @@ function App() {
       <MotionProvider>
         <ThemeProvider>
           <AppearanceProvider>
-            <KuralProvider>
-              <AppContent />
-            </KuralProvider>
+            <ContentProvider>
+              <KuralProvider>
+                <AppContent />
+              </KuralProvider>
+            </ContentProvider>
           </AppearanceProvider>
         </ThemeProvider>
       </MotionProvider>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useKural } from "@/context/KuralContext";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -9,8 +10,13 @@ import {
 
 /** "See Favourites" toggle plus the popover listing the starred kurals. */
 function FavouritesPopover() {
-  const { kuralData, favouriteKurals, toggleFavourite, selectKuralByNumber } =
-    useKural();
+  const {
+    kuralData,
+    favouriteKurals,
+    toggleFavourite,
+    selectKuralByNumber,
+    isKuralHidden,
+  } = useKural();
   const [open, setOpen] = useState(false);
 
   const favouriteItems = useMemo(() => {
@@ -47,43 +53,54 @@ function FavouritesPopover() {
               No favourites yet.
             </div>
           )}
-          {favouriteItems.map((item) => (
-            <div
-              key={item.Number}
-              className="flex items-stretch gap-2 rounded-md border border-border text-quote hover:border-quote hover:text-foreground"
-              data-testid="favourites-item"
-            >
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-auto flex-1 justify-start gap-2.5 px-2.5 py-2 text-left font-light"
-                onClick={() => {
-                  selectKuralByNumber(item.Number);
-                  setOpen(false);
-                }}
+          {favouriteItems.map((item) => {
+            const hidden = isKuralHidden(item.Number);
+            return (
+              <div
+                key={item.Number}
+                className={cn(
+                  "flex items-stretch gap-2 rounded-md border border-border text-quote hover:border-quote hover:text-foreground",
+                  hidden && "opacity-60",
+                )}
+                data-testid="favourites-item"
               >
-                <span className="min-w-7 text-center text-xs text-muted-foreground">
-                  {item.Number}
-                </span>
-                <span className="flex flex-col gap-0.5">
-                  <span className="block text-sm [overflow-wrap:normal] break-keep whitespace-nowrap">
-                    {item.Line1}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-auto flex-1 justify-start gap-2.5 px-2.5 py-2 text-left font-light"
+                  onClick={() => {
+                    selectKuralByNumber(item.Number);
+                    setOpen(false);
+                  }}
+                >
+                  <span className="min-w-7 text-center text-xs text-muted-foreground">
+                    {item.Number}
                   </span>
-                  <span className="block text-sm [overflow-wrap:normal] break-keep whitespace-nowrap">
-                    {item.Line2}
+                  <span className="flex flex-col gap-0.5">
+                    <span className="block text-sm [overflow-wrap:normal] break-keep whitespace-nowrap">
+                      {item.Line1}
+                    </span>
+                    <span className="block text-sm [overflow-wrap:normal] break-keep whitespace-nowrap">
+                      {item.Line2}
+                    </span>
                   </span>
-                </span>
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-auto px-2.5 py-2 text-xs font-light text-muted-foreground hover:text-foreground"
-                onClick={() => toggleFavourite(item.Number)}
-              >
-                Remove
-              </Button>
-            </div>
-          ))}
+                  {hidden && (
+                    <span className="ml-auto self-center rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                      Hidden
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-auto px-2.5 py-2 text-xs font-light text-muted-foreground hover:text-foreground"
+                  onClick={() => toggleFavourite(item.Number)}
+                >
+                  Remove
+                </Button>
+              </div>
+            );
+          })}
         </div>
       </PopoverContent>
     </Popover>

@@ -174,6 +174,17 @@ export interface Appearance {
 }
 
 /**
+ * Content preferences stored in `contentItem`. `hiddenChapters` holds chapter
+ * numbers (1-133), sorted and de-duplicated; sections and இயல் are derived.
+ */
+export interface ContentPreferences {
+  showTranslation: boolean;
+  showMeaning: boolean;
+  showMetadata: boolean;
+  hiddenChapters: number[];
+}
+
+/**
  * File path constants
  */
 export const FILE_PATHS = {
