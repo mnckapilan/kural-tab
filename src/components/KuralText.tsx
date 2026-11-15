@@ -27,7 +27,7 @@ const KuralText: React.FC<KuralTextProps> = ({ kural, onLayoutChanged }) => {
   }, [kural, onLayoutChanged]);
 
   return (
-    <div className="quote-text" ref={kuralRef}>
+    <div className="quote-text" data-testid="kural-text" ref={kuralRef}>
       <div>{kural.Line1}</div>
       <div>{kural.Line2}</div>
     </div>

@@ -53,8 +53,8 @@ const KuralDisplay: React.FC = () => {
 
   return (
     <div className="quote-container" style={containerStyle}>
-      <div className="quote-number">
-        <span>{kural.Number}</span>
+      <div className="quote-number" data-testid="kural-number">
+        <span data-testid="kural-number-value">{kural.Number}</span>
         <button
           type="button"
           className="refresh-button"
@@ -104,12 +104,12 @@ const KuralDisplay: React.FC = () => {
           {showFavourites ? "Hide Favourites" : "See Favourites"}
         </button>
         {showFavourites && (
-          <div className="favourites-list">
+          <div className="favourites-list" data-testid="favourites-list">
             {favouriteItems.length === 0 && (
               <div className="favourites-empty">No favourites yet.</div>
             )}
             {favouriteItems.map((item) => (
-              <div key={item.Number} className="favourites-item">
+              <div key={item.Number} className="favourites-item" data-testid="favourites-item">
                 <button
                   type="button"
                   className="favourites-select"

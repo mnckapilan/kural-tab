@@ -8,14 +8,14 @@ interface KuralMetadataProps {
 const KuralMetadata: React.FC<KuralMetadataProps> = ({ metadata }) => {
   if (!metadata) {
     return (
-      <div className="quote-metadata">
+      <div className="quote-metadata" data-testid="kural-metadata">
         <div className="metadata-placeholder">Metadata unavailable</div>
       </div>
     );
   }
 
   return (
-    <div className="quote-metadata">
+    <div className="quote-metadata" data-testid="kural-metadata">
       <a
         href={`https://thirukkural.gokulnath.com/#/thirukkuralchapters/${metadata.chapter.number}/thirukkurals`}
         target="_blank"

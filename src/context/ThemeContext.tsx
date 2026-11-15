@@ -54,6 +54,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    document.documentElement.dataset.theme =
+      theme === THEME.LIGHT ? "light" : "dark";
     if (theme === THEME.LIGHT) {
       document.body.classList.add("light-mode");
       document.body.classList.remove("dark-mode");
