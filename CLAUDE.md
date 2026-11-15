@@ -145,6 +145,12 @@ components and the design tokens.
   (the CLI has previously written to `../src` and imported `cn` from a bogus package). `Button` has a
   project-specific `muted` variant plus `md`/`pill`/`icon-round` sizes for the app's outlined pill buttons.
   Use `cn()` from `src/lib/utils.ts` for conditional classes. Icons come from `lucide-react`.
+- **Sizing and breakpoints:** use Tailwind's scale (`mb-4`, `rounded-xl`, `max-w-200`, `text-xl`), not
+  pixel-arbitrary values. App-specific type sizes are named tokens in `@theme` (`text-kural` 32px/1.4 for the
+  couplet, `text-kural-number` 28px for the number); everything else uses the built-in `text-xs/base/xl`.
+  Responsive styles are mobile-first: the base classes are the small-screen styles and `sm:` (640px) is the
+  desktop layout (no `max-[600px]:`). Arbitrary values are kept only where nothing on the scale fits
+  (`w-[min(640px,90vw)]` popover, `w-[95%]`/`w-[90%]` card, `[scrollbar-*]`, `leading-[normal]`).
 - The `@/` alias (→ `src/`) is provided by WXT's generated tsconfig and Vite config.
 - Chrome's built-in extension-page stylesheet sets `body { font-family: system-ui }`, which beats anything
   inside `@layer`; that's why `globals.css` has an unlayered `body { @apply font-sans; }`.

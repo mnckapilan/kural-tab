@@ -62,7 +62,7 @@ function FavouritesPopover() {
                   setOpen(false);
                 }}
               >
-                <span className="min-w-[26px] text-center text-xs text-muted-foreground">
+                <span className="min-w-7 text-center text-xs text-muted-foreground">
                   {item.Number}
                 </span>
                 <span className="flex flex-col gap-0.5">

@@ -68,7 +68,7 @@ function KuralDisplay() {
     >
       <m.div
         variants={ENTRANCE_ITEM}
-        className="mb-[15px] flex items-center gap-2.5 text-left text-[28px] text-muted-foreground max-[600px]:mb-2.5 max-[600px]:text-xs"
+        className="mb-2.5 flex items-center gap-2.5 text-left text-xs text-muted-foreground sm:mb-4 sm:text-kural-number"
         data-testid="kural-number"
       >
         <span data-testid="kural-number-value">{kural.Number}</span>

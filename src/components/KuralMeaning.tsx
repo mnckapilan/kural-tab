@@ -5,7 +5,7 @@ interface KuralMeaningProps {
 function KuralMeaning({ meaning }: KuralMeaningProps) {
   return (
     <div
-      className="mb-5 text-left text-[20px] leading-normal text-quote max-[600px]:text-base"
+      className="mb-5 text-left text-base leading-normal text-quote sm:text-xl"
       data-testid="kural-meaning"
     >
       {meaning}

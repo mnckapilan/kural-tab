@@ -27,7 +27,7 @@ function AppContent() {
         <KuralDisplay />
       </div>
       {import.meta.env.DEV && (
-        <div className="pointer-events-none fixed right-4 bottom-4 z-1000 rounded-full border border-white/35 bg-black/40 px-2.5 py-1.5 text-xs tracking-[0.08em] text-white">
+        <div className="pointer-events-none fixed right-4 bottom-4 z-1000 rounded-full border border-white/35 bg-black/40 px-2.5 py-1.5 text-xs tracking-widest text-white">
           DEV BUILD
         </div>
       )}
