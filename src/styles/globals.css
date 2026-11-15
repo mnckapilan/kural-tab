@@ -134,3 +134,26 @@
     transition: none !important;
   }
 }
+
+/*
+ * Chrome's built-in stylesheet for extension pages sets
+ * `body { font-family: system-ui, sans-serif }` and wins over rules inside
+ * @layer, so the font family has to be declared outside any layer.
+ */
+body {
+  @apply font-sans;
+}
+
+@theme {
+  --animate-skeleton: skeleton-pulse 1.5s ease-in-out infinite;
+
+  @keyframes skeleton-pulse {
+    0%,
+    100% {
+      opacity: 0.25;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+}

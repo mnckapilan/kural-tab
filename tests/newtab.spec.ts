@@ -195,7 +195,7 @@ test.describe("Kural Tab new tab page", () => {
     // Default is dark mode
     await expect(html).toHaveAttribute("data-theme", "dark");
 
-    // Toggle to light (the checkbox is display:none; click the label)
+    // Toggle to light
     await toggle.click();
     await expect(html).toHaveAttribute("data-theme", "light");
 

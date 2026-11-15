@@ -56,13 +56,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   useEffect(() => {
     document.documentElement.dataset.theme =
       theme === THEME.LIGHT ? "light" : "dark";
-    if (theme === THEME.LIGHT) {
-      document.body.classList.add("light-mode");
-      document.body.classList.remove("dark-mode");
-    } else {
-      document.body.classList.add("dark-mode");
-      document.body.classList.remove("light-mode");
-    }
+    document.documentElement.classList.toggle("dark", theme === THEME.DARK);
   }, [theme]);
 
   const toggleTheme = (): void => {
@@ -75,7 +69,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   };
 
   if (isLoading) {
-    return <div className="loading">Loading...</div>;
+    return <div>Loading...</div>;
   }
 
   return (

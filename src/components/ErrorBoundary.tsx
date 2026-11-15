@@ -1,4 +1,5 @@
 import React, { Component, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -19,17 +20,21 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   override render() {
     if (this.state.hasError) {
       return (
-        <div className="error">
+        <div className="flex flex-col items-center gap-3 text-quote">
           <div>Something went wrong</div>
           {this.state.error && (
-            <div className="error-message">{this.state.error.message}</div>
+            <div className="text-sm text-muted-foreground">
+              {this.state.error.message}
+            </div>
           )}
-          <button
-            className="retry-button"
+          <Button
+            variant="muted"
+            size="md"
+            className="px-4"
             onClick={() => window.location.reload()}
           >
             Reload
-          </button>
+          </Button>
         </div>
       );
     }

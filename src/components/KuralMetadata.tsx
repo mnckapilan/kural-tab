@@ -5,27 +5,30 @@ interface KuralMetadataProps {
   metadata: KuralMetadataResult | null;
 }
 
+const METADATA_CLASS =
+  "mb-[15px] min-h-5 text-left text-base text-muted-foreground max-[600px]:mb-2.5 max-[600px]:text-xs";
+
 const KuralMetadata: React.FC<KuralMetadataProps> = ({ metadata }) => {
   if (!metadata) {
     return (
-      <div className="quote-metadata" data-testid="kural-metadata">
-        <div className="metadata-placeholder">Metadata unavailable</div>
+      <div className={METADATA_CLASS} data-testid="kural-metadata">
+        <div className="italic opacity-70">Metadata unavailable</div>
       </div>
     );
   }
 
   return (
-    <div className="quote-metadata" data-testid="kural-metadata">
+    <div className={METADATA_CLASS} data-testid="kural-metadata">
       <a
         href={`https://thirukkural.gokulnath.com/#/thirukkuralchapters/${metadata.chapter.number}/thirukkurals`}
         target="_blank"
         rel="noopener noreferrer"
-        className="metadata-tree"
+        className="group relative block pl-[15px] text-muted-foreground no-underline transition-colors duration-300 before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-border before:transition-colors before:duration-300 visited:text-muted-foreground hover:text-quote hover:before:bg-quote active:text-quote"
       >
-        <div className="section">
+        <div className="mb-[5px]">
           {metadata.section.tamil} – {metadata.section.name}
         </div>
-        <div className="chapter">
+        <div className="relative pl-2.5 before:absolute before:top-1/2 before:-left-[15px] before:h-px before:w-4 before:bg-border before:transition-colors before:duration-300 group-hover:before:bg-quote">
           {metadata.chapter.tamil} – {metadata.chapter.name}
         </div>
       </a>

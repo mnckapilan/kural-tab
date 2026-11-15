@@ -1,51 +1,38 @@
 <!doctype html>
 
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="utf-8" />
     <title>New Tab</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/icon/32.png" />
     <!--
-      Critical CSS, inlined so the pre-React paint (before the bundled script loads and
-      the app's src/styles/style.css is applied) isn't a flash of unstyled
-      content. This must stay a MINIMAL subset — just enough to paint the body
-      background/colour and centre the (empty) #root — not a duplicate
-      stylesheet. See CLAUDE.md "Styling" section. Full component styling
-      lives solely in src/styles/style.css.
+      Critical CSS, inlined so the pre-React paint (before the bundled script
+      loads and src/styles/globals.css is applied) isn't a flash of unstyled
+      content. This must stay a MINIMAL subset — just the page background and
+      text colour for each theme — not a duplicate stylesheet. Keep the values
+      in sync with --background/--foreground in src/styles/globals.css. The
+      default theme is dark, hence class="dark" on <html>; ThemeContext
+      toggles it afterwards. See CLAUDE.md "Styling" section.
     -->
     <style>
       :root {
-        --bg-color: #1a1a1a;
-        --text-color: #f2f2f2;
+        --background: #d4d4d4;
+        --foreground: #1a1a1a;
       }
 
-      .light-mode {
-        --bg-color: #d4d4d4;
-        --text-color: #1a1a1a;
+      .dark {
+        --background: #1a1a1a;
+        --foreground: #f2f2f2;
       }
 
       body {
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        font-family: "Helvetica Neue", Arial, sans-serif;
-        font-weight: 300;
-        font-size: 18px;
-        text-align: center;
+        background-color: var(--background);
+        color: var(--foreground);
         margin: 0;
-        padding: 0;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      body.no-transition,
-      body.no-transition * {
-        transition: none !important;
       }
     </style>
   </head>
-  <body class="dark-mode">
+  <body>
     <div id="root"></div>
     <script type="module" src="./main.tsx"></script>
   </body>
