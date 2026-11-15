@@ -26,6 +26,57 @@
 }
 
 /*
+ * The other selectable Tamil typefaces, declared the same way (see CLAUDE.md
+ * "Fonts" for how each file was subsetted). The browser only downloads a face
+ * once it's used, so declaring them all costs nothing for users who keep the
+ * default. Which one applies is chosen by `data-font` on <html>, below.
+ */
+@font-face {
+  font-family: "Noto Serif Tamil";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/fonts/NotoSerifTamil-Light.woff2") format("woff2");
+  unicode-range: U+0964-0965, U+0B82-0BFA, U+200C-200D, U+20B9, U+25CC;
+}
+
+@font-face {
+  font-family: "Tiro Tamil";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/TiroTamil-Regular.woff2") format("woff2");
+  unicode-range: U+0964-0965, U+0B82-0BFA, U+200C-200D, U+20B9, U+25CC;
+}
+
+@font-face {
+  font-family: "Mukta Malar";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/fonts/MuktaMalar-Light.woff2") format("woff2");
+  unicode-range: U+0964-0965, U+0B82-0BFA, U+200C-200D, U+20B9, U+25CC;
+}
+
+@font-face {
+  font-family: "Hind Madurai";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/fonts/HindMadurai-Light.woff2") format("woff2");
+  unicode-range: U+0964-0965, U+0B82-0BFA, U+200C-200D, U+20B9, U+25CC;
+}
+
+@font-face {
+  font-family: "Kavivanar";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Kavivanar-Regular.woff2") format("woff2");
+  unicode-range: U+0964-0965, U+0B82-0BFA, U+200C-200D, U+20B9, U+25CC;
+}
+
+/*
  * Design tokens. Raw values live here as CSS variables (so light/dark can swap
  * them), and are exposed to Tailwind via @theme inline below, which generates
  * utilities like bg-background, text-muted-foreground, border-border.
@@ -40,8 +91,10 @@
  * Typography tokens (--text-*): only the app-specific sizes are named; the rest
  * use Tailwind's scale (text-xs/base/xl). Each is a size, its line-height is set
  * alongside via --text-*--line-height.
- *   text-kural         couplet at desktop size, 32px / 1.4 (mobile uses text-xl)
- *   text-kural-number  kural number in the header row, 28px (mobile uses text-xs)
+ *   text-kural         couplet at desktop size, 32px / 1.4 (mobile: text-kural-sm)
+ *   text-kural-number  kural number in the header row, 28px (mobile: text-kural-number-sm)
+ *   text-body(-lg)     translation and Tamil meaning, 16px (mobile) / 20px (desktop)
+ * All of these are multiplied by --kural-scale (the Text size setting).
  * Breakpoint: everything is mobile-first, with `sm:` (640px) as the desktop
  * layout.
  *
@@ -71,6 +124,11 @@
   --input: var(--border);
   --ring: var(--muted-foreground);
   --radius: 0.5rem;
+
+  /* Text size multiplier, set by [data-size] below. */
+  --kural-scale: 1;
+  /* Tamil typeface stack, overridden by [data-font] below. */
+  --tamil-font-family: "Noto Sans Tamil", Arial, sans-serif;
 }
 
 .dark {
@@ -81,6 +139,119 @@
   --muted-foreground: #999999;
   --border: #555555;
   --destructive: #f97066;
+}
+
+/*
+ * Background palettes, chosen by `data-palette` on <html> (ThemeContext's
+ * sibling, AppearanceContext). Slate is the :root/.dark values above, so it
+ * needs no block. Each preset overrides the five text/background tokens for
+ * light and dark; the `.dark[...]` selectors are more specific than `.dark`,
+ * so they win regardless of order. Keep the values in sync with PALETTES in
+ * src/lib/appearanceOptions.ts (swatches).
+ */
+[data-palette="paper"] {
+  --background: #f3ecdc;
+  --foreground: #2b2118;
+  --quote: #43362a;
+  --muted-foreground: #6b5a48;
+  --border: #6b5a48;
+}
+.dark[data-palette="paper"] {
+  --background: #221c16;
+  --foreground: #efe4d2;
+  --quote: #d6c8b2;
+  --muted-foreground: #a08e78;
+  --border: #a08e78;
+}
+
+[data-palette="palm-leaf"] {
+  --background: #e6d3a3;
+  --foreground: #3a2a12;
+  --quote: #4f3a1c;
+  --muted-foreground: #6e5630;
+  --border: #6e5630;
+}
+.dark[data-palette="palm-leaf"] {
+  --background: #2a2113;
+  --foreground: #f0dfb8;
+  --quote: #dcc595;
+  --muted-foreground: #a89066;
+  --border: #a89066;
+}
+
+[data-palette="ink"] {
+  --background: #dde3ec;
+  --foreground: #14213d;
+  --quote: #26334f;
+  --muted-foreground: #4a5872;
+  --border: #4a5872;
+}
+.dark[data-palette="ink"] {
+  --background: #111a2c;
+  --foreground: #e6ecf5;
+  --quote: #c3cde0;
+  --muted-foreground: #8592ab;
+  --border: #8592ab;
+}
+
+[data-palette="forest"] {
+  --background: #dbe4da;
+  --foreground: #14261a;
+  --quote: #24392a;
+  --muted-foreground: #47604d;
+  --border: #47604d;
+}
+.dark[data-palette="forest"] {
+  --background: #122019;
+  --foreground: #e3eee5;
+  --quote: #bfd2c4;
+  --muted-foreground: #84a08c;
+  --border: #84a08c;
+}
+
+/*
+ * Custom: AppearanceContext sets --background (the user's colour) and
+ * --foreground (near-black or near-white, whichever contrasts more; see
+ * src/lib/colour.ts) inline on <html>, so the rest is derived here by mixing
+ * the two. The percentages approximate the presets' quote/muted/border.
+ * Placed after .dark and equal in specificity, so it wins in both modes.
+ */
+[data-palette="custom"] {
+  --quote: color-mix(in oklab, var(--foreground) 85%, var(--background));
+  --muted-foreground: color-mix(
+    in oklab,
+    var(--foreground) 70%,
+    var(--background)
+  );
+  --border: color-mix(in oklab, var(--foreground) 45%, var(--background));
+}
+
+/* Text size: scales the couplet, kural number, translation and Tamil meaning. */
+[data-size="s"] {
+  --kural-scale: 0.85;
+}
+[data-size="l"] {
+  --kural-scale: 1.15;
+}
+[data-size="xl"] {
+  --kural-scale: 1.3;
+}
+
+/* Tamil typeface. Noto Sans Tamil (the default) is the :root value above. */
+[data-font="noto-serif"] {
+  --tamil-font-family: "Noto Serif Tamil", Georgia, serif;
+}
+[data-font="tiro"] {
+  --tamil-font-family: "Tiro Tamil", Georgia, serif;
+}
+[data-font="mukta"] {
+  --tamil-font-family: "Mukta Malar", Arial, sans-serif;
+}
+[data-font="hind"] {
+  --tamil-font-family: "Hind Madurai", Arial, sans-serif;
+}
+[data-font="kavivanar"] {
+  --tamil-font-family: "Kavivanar", cursive;
 }
 
 @theme inline {
@@ -110,11 +281,19 @@
   --radius-xl: calc(var(--radius) + 4px);
 
   --font-sans: "Helvetica Neue", Arial, sans-serif;
-  --font-tamil: "Noto Sans Tamil", Arial, sans-serif;
+  --font-tamil: var(--tamil-font-family);
 
-  --text-kural: 2rem;
+  /* Sizes that follow the text size setting (--kural-scale; `inline` keeps the var() live). */
+  --text-kural: calc(2rem * var(--kural-scale));
   --text-kural--line-height: 1.4;
-  --text-kural-number: 1.75rem;
+  --text-kural-sm: calc(1.25rem * var(--kural-scale));
+  --text-kural-sm--line-height: 1.4;
+  --text-kural-number: calc(1.75rem * var(--kural-scale));
+  --text-kural-number-sm: calc(0.75rem * var(--kural-scale));
+  --text-body: calc(1rem * var(--kural-scale));
+  --text-body--line-height: 1.5;
+  --text-body-lg: calc(1.25rem * var(--kural-scale));
+  --text-body-lg--line-height: 1.4;
 }
 
 @layer base {

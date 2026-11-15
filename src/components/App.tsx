@@ -1,6 +1,8 @@
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AppearanceProvider } from "@/context/AppearanceContext";
 import { KuralProvider } from "@/context/KuralContext";
 import ThemeToggle from "@/components/ThemeToggle";
+import SettingsButton from "@/components/SettingsButton";
 import KuralDisplay from "@/components/KuralDisplay";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import MotionProvider from "@/components/MotionProvider";
@@ -10,9 +12,11 @@ function App() {
     <ErrorBoundary>
       <MotionProvider>
         <ThemeProvider>
-          <KuralProvider>
-            <AppContent />
-          </KuralProvider>
+          <AppearanceProvider>
+            <KuralProvider>
+              <AppContent />
+            </KuralProvider>
+          </AppearanceProvider>
         </ThemeProvider>
       </MotionProvider>
     </ErrorBoundary>
@@ -23,6 +27,7 @@ function AppContent() {
   return (
     <div className="flex min-h-screen items-center justify-center-safe text-center leading-[normal]">
       <div>
+        <SettingsButton />
         <ThemeToggle />
         <KuralDisplay />
       </div>

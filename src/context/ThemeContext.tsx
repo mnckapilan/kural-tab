@@ -6,42 +6,68 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { type ThemeType, THEME } from "@/types/models";
+import { type ResolvedTheme, type ThemeType, THEME } from "@/types/models";
+import { normaliseTheme } from "@/utils/appearance";
+import { withoutTransitions } from "@/utils/noTransition";
 import { readThemeHint, themeItem, writeThemeHint } from "@/utils/storage";
 
 interface ThemeContextType {
-  theme: ThemeType;
+  /** The theme currently applied (system already resolved). */
+  theme: ResolvedTheme;
+  /** What the user chose: light, dark or system. */
+  themePreference: ThemeType;
+  setThemePreference: (preference: ThemeType) => void;
+  /** Flips to the opposite of the applied theme and stores that explicit value. */
   toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+const DARK_QUERY = "(prefers-color-scheme: dark)";
+
+const subscribeSystemDark = (onChange: () => void): (() => void) => {
+  const query = window.matchMedia(DARK_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+
+const getSystemDark = (): boolean => window.matchMedia(DARK_QUERY).matches;
 
 interface ThemeProviderProps {
   children: ReactNode;
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  // Start from the same theme public/theme-init.js already painted, so the
-  // class effect below doesn't flip it back before storage resolves.
-  const [theme, setTheme] = useState<ThemeType>(
+  // Start from the same preference public/theme-init.js already painted, so
+  // the class effect below doesn't flip it back before storage resolves.
+  const [preference, setPreference] = useState<ThemeType>(
     () => readThemeHint() ?? THEME.DARK,
   );
-  // Theme currently applied to <html>, and whether the next application is the
-  // storage correction (which must not animate; see below).
-  const appliedTheme = useRef<ThemeType | null>(null);
+  const systemDark = useSyncExternalStore(subscribeSystemDark, getSystemDark);
+  const theme: ResolvedTheme =
+    preference === THEME.SYSTEM
+      ? systemDark
+        ? THEME.DARK
+        : THEME.LIGHT
+      : preference;
+
+  // Preference currently applied to <html>, and whether the next application is
+  // the storage correction (which must not animate; see withoutTransitions).
+  const appliedPreference = useRef<ThemeType | null>(null);
   const applyInstantly = useRef(false);
 
   useEffect(() => {
     const getSavedTheme = async (): Promise<void> => {
       try {
-        const saved = await themeItem.getValue();
+        const saved = normaliseTheme(await themeItem.getValue());
         // The localStorage hint can be missing or stale (first run, cleared
         // site data). Correcting it must not animate the body background.
-        if (saved !== appliedTheme.current) {
+        if (saved !== appliedPreference.current) {
           applyInstantly.current = true;
-          setTheme(saved);
+          setPreference(saved);
         }
       } catch (error: unknown) {
         console.error("Error retrieving theme from storage:", error);
@@ -50,41 +76,56 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
     void getSavedTheme();
 
-    // Keep other open new-tab pages in sync
+    // Keep other open new-tab and settings pages in sync
     return themeItem.watch((newTheme) => {
-      setTheme(newTheme);
+      setPreference(normaliseTheme(newTheme));
     });
   }, []);
 
   useEffect(() => {
-    const { body, documentElement } = document;
-    const instant = applyInstantly.current;
-    applyInstantly.current = false;
+    const { documentElement } = document;
+    const apply = (): void => {
+      documentElement.dataset.theme = theme;
+      documentElement.classList.toggle("dark", theme === THEME.DARK);
+    };
 
-    if (instant) body.classList.add("no-transition");
-    documentElement.dataset.theme = theme === THEME.LIGHT ? "light" : "dark";
-    documentElement.classList.toggle("dark", theme === THEME.DARK);
-    if (instant) {
-      // Flush styles while transitions are off, so removing the class below
-      // doesn't start one.
-      void body.offsetWidth;
-      body.classList.remove("no-transition");
+    if (applyInstantly.current) {
+      applyInstantly.current = false;
+      withoutTransitions(apply);
+    } else {
+      apply();
     }
-
-    appliedTheme.current = theme;
-    writeThemeHint(theme);
   }, [theme]);
 
-  const toggleTheme = useCallback((): void => {
-    const newTheme = theme === THEME.DARK ? THEME.LIGHT : THEME.DARK;
-    setTheme(newTheme);
+  useEffect(() => {
+    appliedPreference.current = preference;
+    // The theme effect above has consumed the flag if the resolved theme
+    // changed; if it didn't (e.g. dark -> system on a dark OS), drop it here.
+    applyInstantly.current = false;
+    writeThemeHint(preference);
+  }, [preference]);
 
-    themeItem.setValue(newTheme).catch((error: unknown) => {
+  const setThemePreference = useCallback((next: ThemeType): void => {
+    setPreference(next);
+
+    themeItem.setValue(next).catch((error: unknown) => {
       console.error("Error saving theme:", error);
     });
-  }, [theme]);
+  }, []);
 
-  const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);
+  const toggleTheme = useCallback((): void => {
+    setThemePreference(theme === THEME.DARK ? THEME.LIGHT : THEME.DARK);
+  }, [theme, setThemePreference]);
+
+  const value = useMemo(
+    () => ({
+      theme,
+      themePreference: preference,
+      setThemePreference,
+      toggleTheme,
+    }),
+    [theme, preference, setThemePreference, toggleTheme],
+  );
 
   return <ThemeContext value={value}>{children}</ThemeContext>;
 }

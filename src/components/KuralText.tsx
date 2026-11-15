@@ -9,7 +9,7 @@ const LINE_CLASS = "break-keep whitespace-nowrap [overflow-wrap:normal]";
 function KuralText({ kural }: KuralTextProps) {
   return (
     <div
-      className="mb-5 min-h-8 text-left font-tamil text-xl text-quote sm:text-kural"
+      className="mb-5 min-h-8 text-left font-tamil text-kural-sm text-quote sm:text-kural"
       data-testid="kural-text"
     >
       <div className={LINE_CLASS}>{kural.Line1}</div>

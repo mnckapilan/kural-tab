@@ -1,0 +1,51 @@
+<!doctype html>
+
+<html lang="en" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <title>Kural Tab Settings</title>
+    <meta name="manifest.open_in_tab" content="true" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon/32.png" />
+    <!--
+      Critical CSS, inlined so the pre-React paint (before the bundled script
+      loads and src/styles/globals.css is applied) isn't a flash of unstyled
+      content. This must stay a MINIMAL subset — just the page background and
+      text colour for each theme — not a duplicate stylesheet. Keep the values
+      in sync with --background/--foreground in src/styles/globals.css. The
+      default theme is dark, hence class="dark" on <html>; /theme-init.js
+      (public/) corrects the theme and applies the saved palette/font/size
+      (inline --background/--foreground for non-Slate palettes) before first
+      paint, and ThemeContext/AppearanceContext take over afterwards. See CLAUDE.md "Styling".
+    -->
+    <style>
+      :root {
+        color-scheme: light;
+        --background: #d4d4d4;
+        --foreground: #1a1a1a;
+      }
+
+      .dark {
+        color-scheme: dark;
+        --background: #1a1a1a;
+        --foreground: #f2f2f2;
+      }
+
+      /* On <html> too: the first paint can happen before <body> exists. */
+      html,
+      body {
+        background-color: var(--background);
+        color: var(--foreground);
+      }
+
+      body {
+        margin: 0;
+      }
+    </style>
+    <!-- Blocking on purpose: applies the saved theme before first paint. -->
+    <script src="/theme-init.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

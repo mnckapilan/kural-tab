@@ -95,17 +95,83 @@ export interface KuralMetadataResult {
 }
 
 /**
- * Theme constants
+ * Theme constants. LIGHT/DARK are the two resolved themes; SYSTEM is only ever
+ * a stored preference ("follow prefers-color-scheme").
  */
 export const THEME = {
   LIGHT: "light",
   DARK: "dark",
+  SYSTEM: "system",
 } as const;
 
 /**
- * Theme type derived from constants
+ * Theme preference as stored (light, dark or system)
  */
 export type ThemeType = (typeof THEME)[keyof typeof THEME];
+
+/**
+ * Theme actually applied to the page (system resolved to light or dark)
+ */
+export type ResolvedTheme = Exclude<ThemeType, typeof THEME.SYSTEM>;
+
+/**
+ * Text size ids. The scale factors live in CSS (`[data-size]` in globals.css).
+ */
+export const FONT_SIZE = {
+  S: "s",
+  M: "m",
+  L: "l",
+  XL: "xl",
+} as const;
+
+export type FontSizeId = (typeof FONT_SIZE)[keyof typeof FONT_SIZE];
+
+/**
+ * Tamil typeface ids (`[data-font]` in globals.css, @font-face declarations)
+ */
+export const TAMIL_FONT = {
+  NOTO_SANS: "noto-sans",
+  NOTO_SERIF: "noto-serif",
+  TIRO: "tiro",
+  MUKTA: "mukta",
+  HIND: "hind",
+  KAVIVANAR: "kavivanar",
+} as const;
+
+export type TamilFontId = (typeof TAMIL_FONT)[keyof typeof TAMIL_FONT];
+
+/**
+ * Background palette ids (`[data-palette]` in globals.css). CUSTOM uses the
+ * user's own backgrounds from `Appearance.customBackground`.
+ */
+export const PALETTE = {
+  SLATE: "slate",
+  PAPER: "paper",
+  PALM_LEAF: "palm-leaf",
+  INK: "ink",
+  FOREST: "forest",
+  CUSTOM: "custom",
+} as const;
+
+export type PaletteId = (typeof PALETTE)[keyof typeof PALETTE];
+
+/**
+ * Custom background colours (#rrggbb), one per resolved theme
+ */
+export interface CustomBackground {
+  light: string;
+  dark: string;
+}
+
+/**
+ * Visual preferences stored in `appearanceItem`
+ */
+export interface Appearance {
+  fontSize: FontSizeId;
+  tamilFont: TamilFontId;
+  palette: PaletteId;
+  customBackground: CustomBackground;
+}
 
 /**
  * File path constants

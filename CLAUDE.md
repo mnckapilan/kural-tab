@@ -52,6 +52,11 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
 - `src/entrypoints/background.ts` → `background.js` — service worker (`defineBackground`); on icon click
   just opens a new tab (`browser.tabs.create({})`, using WXT's auto-imported `browser` global), which Chrome resolves to the new tab override. No script
   injection, so no `scripting` permission.
+- `src/entrypoints/options/index.html` + `main.tsx` → `options.html` — the settings page (`SettingsApp`:
+  sidebar with Appearance / Content / About, section driven by the URL hash). The `<meta name="manifest.open_in_tab">`
+  makes WXT emit `options_ui.open_in_tab: true`, so it opens as a full tab. The new tab's gear
+  (`SettingsButton`, aria-label "Settings") calls `browser.runtime.openOptionsPage()`. It loads the same
+  `globals.css` and `theme-init.js` as the new tab and is wrapped in the same theme/appearance providers.
 - There is no `manifest.json` file: the manifest is generated from `wxt.config.ts` (name, description,
   `permissions: ["storage"]`, `action.default_title`). `version` comes from `package.json`.
 - Icons: `public/icon/{16,32,48,128}.png`, auto-discovered by WXT into the manifest's `icons` (Chrome
@@ -69,19 +74,34 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
   (`newtab.html#42`, via `history.replaceState` so randomising doesn't add back-history entries): on load a
   valid hash picks the kural (deep links, reloads), an invalid or missing one falls back to random, and a
   `hashchange` listener follows manual edits. `selectKuralByNumber()` returns `false` for unknown numbers.
-- `src/context/ThemeContext.tsx` — Owns light/dark theme (defaults to dark). Persists via `themeItem` (also `.watch()`ed
-  across open tabs). Toggles the `dark` class on `<html>` (shadcn convention; light = no class) plus a
-  `data-theme="dark|light"` attribute the tests assert on, mirrors the theme into a `localStorage` copy for `public/theme-init.js` (see Styling), and never blocks rendering: it initialises from the synchronous `localStorage` hint, then lets `themeItem.getValue()` correct it when storage resolves. If that correction changes the theme (hint missing/stale), the class/attribute update runs with a temporary `no-transition` class on `body` (add, flush with a forced reflow, remove, all synchronously in the effect) so the body background doesn't animate; normal user toggles still animate.
+- `src/context/ThemeContext.tsx` — Owns the theme **preference** (`light` | `dark` | `system`, defaults to dark) and the
+  **resolved** theme (`theme`, always light or dark). `system` follows `prefers-color-scheme` live
+  (`useSyncExternalStore` over `matchMedia`). Persists the preference via `themeItem` (also `.watch()`ed
+  across open tabs and the settings page). Toggles the `dark` class on `<html>` (shadcn convention; light = no class) plus a
+  `data-theme="dark|light"` attribute (always the resolved theme; the tests assert on it), mirrors the preference into a `localStorage` copy for `public/theme-init.js` (see Styling), and never blocks rendering: it initialises from the synchronous `localStorage` hint, then lets `themeItem.getValue()` correct it when storage resolves. If that correction changes the theme (hint missing/stale), the class/attribute update runs through `withoutTransitions()` (`src/utils/noTransition.ts`: temporary `no-transition` class on `body`, forced reflow, removed again, all synchronously) so the body background doesn't animate; normal user changes still animate. `ThemeToggle` (aria-label "Toggle dark/light mode") flips to the opposite of the _resolved_ theme and stores that explicit value; the settings page uses `setThemePreference`.
+- `src/context/AppearanceContext.tsx` — Must sit inside `ThemeProvider`. Owns `Appearance`
+  (`fontSize`, `tamilFont`, `palette`, `customBackground: {light, dark}`), persisted via `appearanceItem`, with the
+  same hint/correction/`.watch()` pattern as the theme. Applies `data-palette`, `data-font` and `data-size` to `<html>`;
+  for the Custom palette it also sets inline `--background`/`--foreground` for the resolved theme (and removes them
+  for every other palette). Custom colours are applied at once but saved after 300ms idle (dragging a colour picker
+  would otherwise exceed `chrome.storage.sync` write limits); every other change is saved immediately. Selecting
+  Custom for the first time seeds both backgrounds from the palette currently on screen.
 
 Storage items live in `src/utils/storage.ts`, defined with `@wxt-dev/storage` (`storage` from `#imports`):
-`themeItem` (`sync:theme`, fallback `THEME.DARK`) and `favouriteKuralsItem` (`sync:favouriteKurals`, fallback
-`[]`). The keys and `sync` area are unchanged from the pre-WXT code, so existing users' data carries over.
+`themeItem` (`sync:theme`, fallback `THEME.DARK`; now also accepts `"system"`), `appearanceItem`
+(`sync:appearance`, `version: 1`, full-object fallback `DEFAULT_APPEARANCE`) and `favouriteKuralsItem`
+(`sync:favouriteKurals`, fallback `[]`). The keys and `sync` area of the first and last are unchanged from the pre-WXT code, so existing users' data carries over.
+Stored values are untrusted: always pass them through `normaliseTheme` / `normaliseAppearance`
+(`src/utils/appearance.ts`), which merge field by field over the defaults, so partial or invalid data never breaks the page. To change the
+shape later, bump `version` and add `migrations` to `appearanceItem`.
 There are no `window.chrome` guards or `chrome.d.ts`; the app is only meant to run as an extension page.
 
 **Data layer:**
 
-- `src/types/models.ts` — Central module for all interfaces plus the `THEME` and `FILE_PATHS`
-  constants. Prefer these constants over string literals.
+- `src/types/models.ts` — Central module for all interfaces plus the `THEME`, `FONT_SIZE`, `TAMIL_FONT`, `PALETTE` and `FILE_PATHS`
+  constants (and `Appearance`). Prefer these constants over string literals.
+- `src/lib/appearanceOptions.ts` — Display lists the settings UI reads (labels, descriptions, font families, size scales, preset palette colours for swatches).
+- `src/lib/colour.ts` — Pure colour helpers (hex parse/normalise, WCAG luminance/contrast, `pickForeground`).
 - `src/services/kuralService.ts` — Static-method class. Fetches both JSON files in parallel, validates them,
   and throws `KuralDataError` on failure. `buildMetadataLookup()` flattens the section → chapterGroup →
   chapter hierarchy into a `Map<kuralNumber, KuralMetadataResult>` by expanding each chapter's
@@ -102,6 +122,7 @@ App
     └── ThemeProvider
         └── KuralProvider
             └── AppContent
+                ├── SettingsButton     (gear → options page)
                 ├── ThemeToggle
                 ├── KuralDisplay
                 │   ├── KuralSkeleton      (only if loading takes > SKELETON_DELAY_MS)
@@ -113,6 +134,12 @@ App
                 │   └── FavouritesPopover  (shadcn Popover: toggle + list; owns its open state)
                 └── dev indicator          (only when import.meta.env.DEV)
 ```
+
+The settings page tree is `SettingsApp > ErrorBoundary > MotionProvider > ThemeProvider > AppearanceProvider >
+SettingsPage` (sidebar + `AppearanceSettings` / `ContentSettings` / `AboutSettings`, laid out with `SettingsGroup`/`SettingsRow`).
+`ContentSettings` is still a local-state prototype (not wired to storage yet). `AppearanceSettings` has a live preview (plain app
+classes, so it reflects the settings applied to `<html>`), colour mode, background swatches (+ Custom with a colour input and hex
+field per mode; invalid hex shows `aria-invalid` and isn't saved), text size, the Tamil font grid and "Reset appearance".
 
 `KuralNumberJump` renders the number as a button; clicking it swaps in an input (Enter jumps, Escape or
 blur cancels, out-of-range input stays open with `aria-invalid`). `KuralDisplay` renders its own error state (separate from `ErrorBoundary`, which only catches thrown
@@ -143,6 +170,17 @@ components and the design tokens.
   `text-quote` (couplet/translation text), `text-muted-foreground` (metadata, idle buttons),
   `border-border`, plus the standard shadcn set (`popover`, `accent`, `ring`, …) and `font-tamil`/`font-sans`.
   Dark variants use `dark:` (`@custom-variant dark` matches `.dark` on `<html>`).
+- **Palettes:** Slate is the `:root`/`.dark` tokens. `[data-palette="paper|palm-leaf|ink|forest"]` and
+  `.dark[data-palette=...]` blocks override `--background/--foreground/--quote/--muted-foreground/--border` (pure CSS; keep them in
+  sync with `PALETTES` in `appearanceOptions.ts`). **Custom** only gets `--background` (the user's colour) and
+  `--foreground` inline from JS: near-black `#1a1a1a` or near-white `#f2f2f2`, whichever has the higher WCAG contrast
+  against the background (`pickForeground`). `[data-palette="custom"]` derives `--quote`/`--muted-foreground`/`--border` with
+  `color-mix(in oklab, var(--foreground) 85% / 70% / 45%, var(--background))`, so contrast holds for any colour. Light and dark
+  mode have separate custom backgrounds.
+- **Text size:** `data-size="s|m|l|xl"` on `<html>` sets `--kural-scale` (0.85 / 1 / 1.15 / 1.3). Because `@theme inline` inlines
+  values, the scaled tokens reference the runtime var: `--text-kural: calc(2rem * var(--kural-scale))`. Scaled utilities:
+  `text-kural(-sm)`, `text-kural-number(-sm)`, `text-body(-lg)` (couplet, number, translation, Tamil meaning). Use them instead of
+  `text-xl` etc. for that text. The `w-min` + `whitespace-nowrap` coupling is unaffected (everything scales together).
 - **Components:** shadcn/ui (new-york style, `components.json`) lives in `src/components/ui/` and is
   copied-in source we own, built on the unified `radix-ui` package. Add more with
   `npx shadcn@latest add <name>` — check where it writes files and that imports use `@/lib/utils`
@@ -166,12 +204,17 @@ To avoid a flash of unstyled content or of the wrong theme before the bundled CS
   background — deliberately minimal, not a duplicate stylesheet. The background is on `<html>` too because
   Chrome can paint before `<body>` exists. If you change those tokens in `globals.css`, update the inline
   block too.
-- `public/theme-init.js` is a blocking classic `<script>` in the `<head>` (MV3's CSP forbids inline
-  scripts). It reads a synchronous `localStorage` copy of the theme (`THEME_HINT_KEY` in
-  `src/utils/storage.ts`) and removes `dark` before first paint for light-mode users, since
-  `chrome.storage` is async and resolves after the first paint. `ThemeContext` initialises from that
-  copy and rewrites it on every theme change; `themeItem` (`sync:theme`) stays the source of truth. The
-  copy is per-device, so after a theme change synced from another device the first paint can be wrong
+- `public/theme-init.js` is a blocking classic `<script>` in the `<head>` of both `newtab.html` and `options.html` (MV3's CSP forbids inline
+  scripts). It reads two synchronous `localStorage` copies (`THEME_HINT_KEY` = `kural-tab:theme`, the bare preference
+  `light|dark|system`, key and old values unchanged; `APPEARANCE_HINT_KEY` = `kural-tab:appearance`, JSON of the `Appearance` plus
+  `colours`; both in `src/utils/storage.ts`) and, before first paint, resolves the theme (`system` via `matchMedia`), sets the `dark` class and
+  `data-theme`/`data-palette`/`data-font`/`data-size`, since `chrome.storage` is async and resolves after the first paint.
+  First-paint colours for non-Slate palettes: the hint's `colours` holds the resolved `{background, foreground}` per mode
+  (computed in TS, so the script knows no palette values), and the script sets them as inline `--background/--foreground`. That
+  means no per-palette rules in the inline critical `<style>`. `AppearanceContext` then owns the inline vars: it keeps them for
+  Custom and removes them for presets/Slate (the stylesheet takes over with identical values). `ThemeContext`/`AppearanceContext` initialise from the
+  copies and rewrite them on every change; `themeItem`/`appearanceItem` stay the source of truth. The
+  copies are per-device, so after a change synced from another device the first paint can be wrong
   once.
 
 **Animation — Motion** (`motion`, import from `motion/react`). `src/components/MotionProvider.tsx` wraps the
@@ -180,9 +223,22 @@ use `m.div` etc., not `motion.div` (strict mode throws). Reuse the shared timing
 primitives (Popover, …) keep their `tw-animate-css` `data-[state=open]:animate-in` classes; don't also wrap
 them in Motion.
 
-Noto Sans Tamil is self-hosted, not loaded from Google Fonts: `public/fonts/NotoSansTamil-Light.woff2`
-(weight 300 — the only weight used anywhere in the app; `body` is `font-light`, and buttons set
-`font-light` explicitly) is subsetted to the Tamil unicode range and declared via `@font-face` at the top of
+Tamil fonts are self-hosted, not loaded from Google Fonts. The user picks one with `data-font` on `<html>`;
+`@theme inline { --font-tamil: var(--tamil-font-family) }`, with the stack defined on `:root` (Noto Sans Tamil) and overridden
+per `[data-font="..."]`. It applies to everything using `font-tamil` (couplet, Tamil meaning, Tamil names in the metadata). All
+faces are declared with `@font-face` in `globals.css` (`font-display: swap`, same `unicode-range`); the browser downloads only the
+ones used. Files in `public/fonts/` (all SIL OFL 1.1; each copyright line is in `LICENSE.txt`, update it when adding a font):
+`NotoSansTamil-Light` (300, default), `NotoSerifTamil-Light` (300), `TiroTamil-Regular` (400), `MuktaMalar-Light` (300),
+`HindMadurai-Light` (300), `Kavivanar-Regular` (400). Weight 300 is the only weight used for body text (`body` is `font-light`, and buttons set
+`font-light` explicitly); Tiro Tamil and Kavivanar only ship Regular. Sources are the `google/fonts` repo (`ofl/<name>/`); each was
+subsetted with
+`uvx --from 'fonttools[woff]' pyftsubset in.ttf --unicodes="U+0964-0965,U+0B82-0BFA,U+200C-200D,U+20B9,U+25CC" --flavor=woff2 --layout-features='*' --output-file=public/fonts/X.woff2`.
+Noto Serif Tamil is a variable font (wght, wdth), so it was first pinned with
+`uvx --from fonttools fonttools varLib.instancer NotoSerifTamil[wdth,wght].ttf wght=300 wdth=100 -o NotoSerifTamil-Light.ttf`.
+Do the work in a temp dir outside the repo. To add a font: subset, add `@font-face` + a `[data-font]` block in `globals.css`, an id in
+`TAMIL_FONT` and an entry in `TAMIL_FONTS`.
+
+Noto Sans Tamil (`public/fonts/NotoSansTamil-Light.woff2`, weight 300) is subsetted to the Tamil unicode range and declared via `@font-face` at the top of
 `src/styles/globals.css` (`font-tamil` utility). `public/fonts/LICENSE.txt` carries the required SIL OFL 1.1
 text. The `@font-face` `src: url(...)` is an absolute public path (`/fonts/...`): Vite leaves such URLs
 untouched and `public/` is copied to the output root, so it resolves against the extension origin. Don't
@@ -203,6 +259,10 @@ make it relative to the CSS file.
 - `fixtures.ts` — Extends the Playwright `test` fixture to launch a persistent Chromium context with
   `--load-extension=.output/chrome-mv3`, and derives `extensionId` from the service worker URL. Tests must run
   non-headless (set in `playwright.config.ts`); extensions don't load headless.
+- `options.spec.ts` — The settings page (`chrome-extension://<id>/options.html`): colour mode (incl. System via
+  `page.emulateMedia`), palettes, custom hex (valid/invalid), font, size, reset, and live propagation to other open pages. Note
+  Radix single `ToggleGroup`s are `role="radiogroup"` with `radio` items (not `group`). `playwright.config.ts` sets
+  `actionTimeout: 10000` so a locator that never matches fails fast. An `afterEach` resets appearance and theme.
 - `newtab.spec.ts` — Navigates to `chrome-extension://<id>/newtab.html` and covers rendering, kural number
   range, randomise, star toggle, favourites panel, theme toggle, metadata links, URL-hash deep links, and
   jump-to-number. Tests locate elements

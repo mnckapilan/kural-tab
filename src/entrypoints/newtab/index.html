@@ -12,8 +12,9 @@
       text colour for each theme — not a duplicate stylesheet. Keep the values
       in sync with --background/--foreground in src/styles/globals.css. The
       default theme is dark, hence class="dark" on <html>; /theme-init.js
-      (public/) removes it before first paint if the last-used theme was
-      light, and ThemeContext takes over afterwards. See CLAUDE.md "Styling".
+      (public/) corrects the theme and applies the saved palette/font/size
+      (inline --background/--foreground for non-Slate palettes) before first
+      paint, and ThemeContext/AppearanceContext take over afterwards. See CLAUDE.md "Styling".
     -->
     <style>
       :root {

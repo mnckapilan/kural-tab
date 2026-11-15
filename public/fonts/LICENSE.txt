@@ -1,4 +1,24 @@
-Copyright 2018 The Noto Project Authors (github.com/googlei18n/noto-fonts)
+The following fonts are bundled (subsetted to the Tamil unicode range and
+converted to WOFF2) and are each licensed under the SIL Open Font License,
+Version 1.1, reproduced below:
+
+NotoSansTamil-Light.woff2 (Noto Sans Tamil)
+  Copyright 2018 The Noto Project Authors (github.com/googlei18n/noto-fonts)
+
+NotoSerifTamil-Light.woff2 (Noto Serif Tamil)
+  Copyright 2022 The Noto Project Authors (https://github.com/notofonts/tamil)
+
+TiroTamil-Regular.woff2 (Tiro Tamil)
+  Copyright 2020 The Indigo Project Authors (https://github.com/TiroTypeworks/Indigo)
+
+MuktaMalar-Light.woff2 (Mukta Malar)
+  Copyright (c) 2016, Ek Type. All rights reserved.
+
+HindMadurai-Light.woff2 (Hind Madurai)
+  Copyright (c) 2015 Indian Type Foundry (info@indiantypefoundry.com)
+
+Kavivanar-Regular.woff2 (Kavivanar)
+  Copyright (c) 2015, Tharique Azeez (http://thariqueazeez.com|zeezat@gmail.com)
 
 This Font Software is licensed under the SIL Open Font License,
 Version 1.1.
