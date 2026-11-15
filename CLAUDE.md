@@ -65,7 +65,10 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
 - `src/context/KuralContext.tsx` — Owns kural data, random selection, and favourites. Fetches once and
   caches `kuralData` + the metadata lookup map in state, so `refreshKural()` re-randomises without refetching.
   Persists favourites (sorted number array) via `favouriteKuralsItem`, and `.watch()`es it so
-  other open new-tab pages stay in sync.
+  other open new-tab pages stay in sync. The current kural is mirrored into the URL hash
+  (`newtab.html#42`, via `history.replaceState` so randomising doesn't add back-history entries): on load a
+  valid hash picks the kural (deep links, reloads), an invalid or missing one falls back to random, and a
+  `hashchange` listener follows manual edits. `selectKuralByNumber()` returns `false` for unknown numbers.
 - `src/context/ThemeContext.tsx` — Owns light/dark theme (defaults to dark). Persists via `themeItem` (also `.watch()`ed
   across open tabs). Toggles the `dark` class on `<html>` (shadcn convention; light = no class) plus a
   `data-theme="dark|light"` attribute the tests assert on, mirrors the theme into a `localStorage` copy for `public/theme-init.js` (see Styling), and never blocks rendering: it initialises from the synchronous `localStorage` hint, then lets `themeItem.getValue()` correct it when storage resolves. If that correction changes the theme (hint missing/stale), the class/attribute update runs with a temporary `no-transition` class on `body` (add, flush with a forced reflow, remove, all synchronously in the effect) so the body background doesn't animate; normal user toggles still animate.
@@ -102,7 +105,7 @@ App
                 ├── ThemeToggle
                 ├── KuralDisplay
                 │   ├── KuralSkeleton      (only if loading takes > SKELETON_DELAY_MS)
-                │   ├── number row         (number + Randomise + star buttons)
+                │   ├── number row         (KuralNumberJump + Randomise + star buttons)
                 │   ├── KuralMetadata      (section + chapter; links to thirukkural.gokulnath.com)
                 │   ├── KuralText          (2-line Tamil couplet)
                 │   ├── KuralExplanation   (English translation)
@@ -111,7 +114,8 @@ App
                 └── dev indicator          (only when import.meta.env.DEV)
 ```
 
-`KuralDisplay` renders its own error state (separate from `ErrorBoundary`, which only catches thrown
+`KuralNumberJump` renders the number as a button; clicking it swaps in an input (Enter jumps, Escape or
+blur cancels, out-of-range input stays open with `aria-invalid`). `KuralDisplay` renders its own error state (separate from `ErrorBoundary`, which only catches thrown
 render errors); `FavouritesPopover` owns the favourites panel open/closed state and reads favourites from
 `useKural()`.
 
@@ -200,9 +204,10 @@ make it relative to the CSS file.
   `--load-extension=.output/chrome-mv3`, and derives `extensionId` from the service worker URL. Tests must run
   non-headless (set in `playwright.config.ts`); extensions don't load headless.
 - `newtab.spec.ts` — Navigates to `chrome-extension://<id>/newtab.html` and covers rendering, kural number
-  range, randomise, star toggle, favourites panel, theme toggle, and metadata links. Tests locate elements
+  range, randomise, star toggle, favourites panel, theme toggle, metadata links, URL-hash deep links, and
+  jump-to-number. Tests locate elements
   by role/accessible name (`getByRole("button", { name: "Randomise" })`) or `data-testid`
-  (`kural-text`, `kural-number-value`, `favourites-item`, …) — never by CSS class, since Tailwind classes
+  (`kural-text`, `kural-number-value`, `kural-number-input`, `favourites-item`, …) — never by CSS class, since Tailwind classes
   are presentational. Changing an `aria-label` or removing a `data-testid` breaks tests.
 - Favourites persist in extension `sync` storage within a run, so tests clean up after themselves by
   unstarring. `retries: 1` is set in the config.

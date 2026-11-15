@@ -257,4 +257,83 @@ test.describe("Kural Tab new tab page", () => {
     const href = await metadataLink.getAttribute("href");
     expect(href).toMatch(/thirukkuralchapters\/\d+/);
   });
+
+  test("URL hash deep-links to a kural and tracks the current one", async ({
+    context,
+    extensionId,
+  }) => {
+    const page = await context.newPage();
+    await page.goto(`chrome-extension://${extensionId}/newtab.html#42`);
+    await waitForKural(page);
+    await expect(page.getByTestId("kural-number-value")).toHaveText("42");
+
+    // Randomising rewrites the hash to the new kural
+    await page.getByRole("button", { name: "Randomise" }).click();
+    await expect(page).not.toHaveURL(/#42$/);
+    const shown = await page.getByTestId("kural-number-value").textContent();
+    await expect(page).toHaveURL(new RegExp(`#${shown}$`));
+
+    // Reloading keeps the same kural
+    await page.reload();
+    await waitForKural(page);
+    await expect(page.getByTestId("kural-number-value")).toHaveText(
+      shown ?? "",
+    );
+
+    // Editing the hash in place switches kural
+    await page.evaluate(() => {
+      window.location.hash = "#1330";
+    });
+    await expect(page.getByTestId("kural-number-value")).toHaveText("1330");
+  });
+
+  test("an invalid URL hash falls back to a random kural", async ({
+    context,
+    extensionId,
+  }) => {
+    const page = await context.newPage();
+    await page.goto(`chrome-extension://${extensionId}/newtab.html#9999`);
+    await waitForKural(page);
+
+    const num = parseInt(
+      (await page.getByTestId("kural-number-value").textContent()) ?? "0",
+      10,
+    );
+    expect(num).toBeGreaterThanOrEqual(1);
+    expect(num).toBeLessThanOrEqual(1330);
+    await expect(page).toHaveURL(new RegExp(`#${num}$`));
+  });
+
+  test("clicking the number jumps to a typed kural", async ({
+    context,
+    extensionId,
+  }) => {
+    const page = await context.newPage();
+    await page.goto(`chrome-extension://${extensionId}/newtab.html#10`);
+    await waitForKural(page);
+
+    const numberButton = page.getByRole("button", { name: /^Kural \d+\./ });
+    const input = page.getByTestId("kural-number-input");
+
+    // Out-of-range input is rejected and the input stays open
+    await numberButton.click();
+    await input.fill("2000");
+    await input.press("Enter");
+    await expect(input).toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByTestId("kural-number-value")).toHaveCount(0);
+
+    // Escape cancels without changing the kural
+    await input.press("Escape");
+    await expect(input).toHaveCount(0);
+    await expect(page.getByTestId("kural-number-value")).toHaveText("10");
+    await expect(numberButton).toBeFocused();
+
+    // A valid number navigates to it
+    await numberButton.click();
+    await input.fill("500");
+    await input.press("Enter");
+    await expect(page.getByTestId("kural-number-value")).toHaveText("500");
+    await expect(page).toHaveURL(/#500$/);
+    await expect(numberButton).toBeFocused();
+  });
 });

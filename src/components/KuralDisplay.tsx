@@ -6,6 +6,7 @@ import KuralExplanation from "@/components/KuralExplanation";
 import KuralMeaning from "@/components/KuralMeaning";
 import KuralSkeleton from "@/components/KuralSkeleton";
 import FavouritesPopover from "@/components/FavouritesPopover";
+import KuralNumberJump from "@/components/KuralNumberJump";
 import { Star } from "lucide-react";
 import { AnimatePresence, m } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -71,7 +72,7 @@ function KuralDisplay() {
         className="mb-2.5 flex items-center gap-2.5 text-left text-xs text-muted-foreground sm:mb-4 sm:text-kural-number"
         data-testid="kural-number"
       >
-        <span data-testid="kural-number-value">{kural.Number}</span>
+        <KuralNumberJump kuralNumber={kural.Number} />
         <Button
           type="button"
           variant="muted"

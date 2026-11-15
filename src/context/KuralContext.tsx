@@ -25,7 +25,8 @@ interface KuralContextType {
   refreshKural: () => void;
   toggleFavourite: (kuralNumber: number) => void;
   isFavourite: (kuralNumber: number) => boolean;
-  selectKuralByNumber: (kuralNumber: number) => void;
+  /** Shows the given kural; returns false (and changes nothing) if no kural has that number. */
+  selectKuralByNumber: (kuralNumber: number) => boolean;
 }
 
 const KuralContext = createContext<KuralContextType | undefined>(undefined);
@@ -51,6 +52,15 @@ const loadKuralData = async (): Promise<LoadedKuralData> => {
     metadataLookup: KuralService.buildMetadataLookup(metadataRoot),
   };
 };
+
+/** Parses a `#42`-style location hash into a kural number, or null if it isn't one. */
+const kuralNumberFromHash = (hash: string): number | null => {
+  const match = /^#(\d+)$/.exec(hash);
+  return match ? Number(match[1]) : null;
+};
+
+const hasKural = (data: KuralData, num: number | null): num is number =>
+  num !== null && data.kural.some((item) => item.Number === num);
 
 export function KuralProvider({ children }: KuralProviderProps) {
   const [loaded, setLoaded] = useState<LoadedKuralData | null>(null);
@@ -88,7 +98,14 @@ export function KuralProvider({ children }: KuralProviderProps) {
       (data) => {
         if (cancelled) return;
         setLoaded(data);
-        setKuralNumber(KuralService.getRandomKural(data.kuralData).Number);
+        // A `newtab.html#42` deep link (or a reload) shows that kural;
+        // otherwise pick a random one.
+        const fromHash = kuralNumberFromHash(window.location.hash);
+        setKuralNumber(
+          hasKural(data.kuralData, fromHash)
+            ? fromHash
+            : KuralService.getRandomKural(data.kuralData).Number,
+        );
       },
       (err: unknown) => {
         if (cancelled) return;
@@ -102,6 +119,30 @@ export function KuralProvider({ children }: KuralProviderProps) {
       cancelled = true;
     };
   }, [loadAttempt]);
+
+  // Mirror the current kural into the URL so reloads keep it and the link can
+  // be shared. replaceState, not pushState: randomising shouldn't fill the
+  // tab's back history (and replaceState doesn't fire `hashchange`).
+  useEffect(() => {
+    if (kuralNumber === null) return;
+    const hash = `#${kuralNumber}`;
+    if (window.location.hash !== hash) {
+      window.history.replaceState(null, "", hash);
+    }
+  }, [kuralNumber]);
+
+  // Follow manual edits to the hash (e.g. pasting `#42` into the address bar).
+  useEffect(() => {
+    if (!kuralData) return;
+    const onHashChange = (): void => {
+      const fromHash = kuralNumberFromHash(window.location.hash);
+      if (hasKural(kuralData, fromHash)) {
+        setKuralNumber(fromHash);
+      }
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, [kuralData]);
 
   const kural = useMemo(
     () => kuralData?.kural.find((item) => item.Number === kuralNumber) ?? null,
@@ -123,10 +164,10 @@ export function KuralProvider({ children }: KuralProviderProps) {
   }, [kuralData]);
 
   const selectKuralByNumber = useCallback(
-    (selected: number): void => {
-      if (kuralData?.kural.some((item) => item.Number === selected)) {
-        setKuralNumber(selected);
-      }
+    (selected: number): boolean => {
+      if (!kuralData || !hasKural(kuralData, selected)) return false;
+      setKuralNumber(selected);
+      return true;
     },
     [kuralData],
   );
