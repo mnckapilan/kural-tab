@@ -68,8 +68,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     });
   };
 
+  // Storage resolves in a few ms; render nothing (the inline critical CSS
+  // already paints the background) rather than flashing a loading message.
   if (isLoading) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   return (

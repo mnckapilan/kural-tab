@@ -68,7 +68,7 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
 - `src/context/ThemeContext.tsx` — Owns light/dark theme (defaults to dark). Persists via `themeItem` (also `.watch()`ed
   across open tabs). Toggles the `dark` class on `<html>` (shadcn convention; light = no class) plus a
   `data-theme="dark|light"` attribute the tests assert on, and puts a temporary `no-transition` class on
-  `body` to prevent a flash on load. Renders a `Loading...` div until storage resolves.
+  `body` to prevent a flash on load. Renders nothing until storage resolves (a few ms; the inline critical CSS already paints the background).
 
 Storage items live in `src/utils/storage.ts`, defined with `@wxt-dev/storage` (`storage` from `#imports`):
 `themeItem` (`sync:theme`, fallback `THEME.DARK`) and `favouriteKuralsItem` (`sync:favouriteKurals`, fallback
@@ -101,7 +101,7 @@ App
             └── AppContent
                 ├── ThemeToggle
                 ├── KuralDisplay
-                │   ├── KuralSkeleton      (loading state)
+                │   ├── KuralSkeleton      (only if loading takes > SKELETON_DELAY_MS)
                 │   ├── number row         (number + Randomise + star buttons)
                 │   ├── KuralMetadata      (section + chapter; links to thirukkural.gokulnath.com)
                 │   ├── KuralText          (2-line Tamil couplet)
@@ -151,7 +151,7 @@ If you change those tokens in `globals.css`, update the inline block too.
 
 **Animation — Motion** (`motion`, import from `motion/react`). `src/components/MotionProvider.tsx` wraps the
 app in `LazyMotion` (`domAnimation`, `strict`) and `MotionConfig reducedMotion="user"`, so components must
-use `m.div` etc., not `motion.div` (strict mode throws). Reuse the shared timings in `src/lib/motion.ts` (`FADE_IN`, `FADE_OUT`, `EASE_OUT`). Use `AnimatePresence` for enter/exit. Radix/shadcn
+use `m.div` etc., not `motion.div` (strict mode throws). Reuse the shared timings in `src/lib/motion.ts` (`FADE_IN`, `FADE_OUT`, `EASE_OUT`). First load uses the `ENTRANCE_CONTAINER`/`ENTRANCE_ITEM` variants (a 0.6s staggered fade-up of the number row, couplet block and favourites). Normal loads finish in well under 100ms, so `KuralDisplay` renders nothing while loading and only shows the skeleton after `SKELETON_DELAY_MS` (400ms, via `useDelayedFlag`) to avoid a flash. Use `AnimatePresence` for enter/exit. Radix/shadcn
 primitives (Popover, …) keep their `tw-animate-css` `data-[state=open]:animate-in` classes; don't also wrap
 them in Motion.
 

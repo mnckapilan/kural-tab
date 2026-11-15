@@ -16,7 +16,14 @@ import {
 } from "@/components/ui/popover";
 import { QUOTE_CONTAINER } from "@/lib/styles";
 import { cn } from "@/lib/utils";
-import { FADE_IN, FADE_OUT } from "@/lib/motion";
+import {
+  ENTRANCE_CONTAINER,
+  ENTRANCE_ITEM,
+  FADE_IN,
+  FADE_OUT,
+  SKELETON_DELAY_MS,
+} from "@/lib/motion";
+import { useDelayedFlag } from "@/hooks/useDelayedFlag";
 
 const KuralDisplay: React.FC = () => {
   const {
@@ -35,6 +42,7 @@ const KuralDisplay: React.FC = () => {
   const [showFavourites, setShowFavourites] = useState(false);
   // Bumped on each star click so the "pop" plays only on user toggles, not on navigation.
   const [starToggles, setStarToggles] = useState(0);
+  const showSkeleton = useDelayedFlag(isLoading, SKELETON_DELAY_MS);
 
   const favouriteItems = useMemo(() => {
     if (!kuralData) return [];
@@ -44,8 +52,10 @@ const KuralDisplay: React.FC = () => {
       .filter((item): item is NonNullable<typeof item> => Boolean(item));
   }, [kuralData, favouriteKurals]);
 
+  // Fast loads render nothing (just the page background) and then fade the
+  // kural in; the skeleton only appears if loading is genuinely slow.
   if (isLoading) {
-    return <KuralSkeleton />;
+    return showSkeleton ? <KuralSkeleton /> : null;
   }
 
   if (error || !kural) {
@@ -76,10 +86,12 @@ const KuralDisplay: React.FC = () => {
     <m.div
       className={QUOTE_CONTAINER}
       style={containerStyle}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1, transition: FADE_IN }}
+      variants={ENTRANCE_CONTAINER}
+      initial="hidden"
+      animate="show"
     >
-      <div
+      <m.div
+        variants={ENTRANCE_ITEM}
         className="mb-[15px] flex items-center gap-2.5 text-left text-[28px] text-muted-foreground max-[600px]:mb-2.5 max-[600px]:text-xs"
         data-testid="kural-number"
       >
@@ -121,33 +133,35 @@ const KuralDisplay: React.FC = () => {
             />
           </m.span>
         </Button>
-      </div>
+      </m.div>
 
       {/*
         Couplet swap: `wait` guarantees only one block (and one set of test ids)
         exists at a time, so the new KuralText measures itself after it mounts
         and `--kural-text-width` is only updated for the new couplet. The number
         row above updates instantly. `initial={false}` skips the first mount,
-        which the card fade-in already covers.
+        which the staggered entrance already covers.
       */}
-      <AnimatePresence initial={false} mode="wait">
-        <m.div
-          key={kural.Number}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0, transition: FADE_IN }}
-          exit={{ opacity: 0, y: -4, transition: FADE_OUT }}
-        >
-          <KuralMetadata metadata={metadata} />
+      <m.div variants={ENTRANCE_ITEM}>
+        <AnimatePresence initial={false} mode="wait">
+          <m.div
+            key={kural.Number}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0, transition: FADE_IN }}
+            exit={{ opacity: 0, y: -4, transition: FADE_OUT }}
+          >
+            <KuralMetadata metadata={metadata} />
 
-          <KuralText kural={kural} onLayoutChanged={handleLayoutChange} />
+            <KuralText kural={kural} onLayoutChanged={handleLayoutChange} />
 
-          <KuralExplanation explanation={kural.Translation} />
+            <KuralExplanation explanation={kural.Translation} />
 
-          <KuralMeaning meaning={kural.mv} />
-        </m.div>
-      </AnimatePresence>
+            <KuralMeaning meaning={kural.mv} />
+          </m.div>
+        </AnimatePresence>
+      </m.div>
 
-      <div className="mt-5 text-left">
+      <m.div variants={ENTRANCE_ITEM} className="mt-5 text-left">
         <Popover open={showFavourites} onOpenChange={setShowFavourites}>
           <PopoverTrigger asChild>
             <Button
@@ -213,7 +227,7 @@ const KuralDisplay: React.FC = () => {
             </div>
           </PopoverContent>
         </Popover>
-      </div>
+      </m.div>
     </m.div>
   );
 };
