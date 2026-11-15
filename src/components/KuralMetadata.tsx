@@ -1,5 +1,5 @@
 import React from "react";
-import type { KuralMetadataResult } from "../types/models";
+import type { KuralMetadataResult } from "@/types/models";
 
 interface KuralMetadataProps {
   metadata: KuralMetadataResult | null;

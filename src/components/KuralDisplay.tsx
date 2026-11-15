@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from "react";
-import { useKural } from "../context/KuralContext";
-import KuralText from "./KuralText";
-import KuralMetadata from "./KuralMetadata";
-import KuralExplanation from "./KuralExplanation";
-import KuralMeaning from "./KuralMeaning";
-import KuralSkeleton from "./KuralSkeleton";
-import { useKuralLayout } from "../hooks/useKuralLayout";
+import { useKural } from "@/context/KuralContext";
+import KuralText from "@/components/KuralText";
+import KuralMetadata from "@/components/KuralMetadata";
+import KuralExplanation from "@/components/KuralExplanation";
+import KuralMeaning from "@/components/KuralMeaning";
+import KuralSkeleton from "@/components/KuralSkeleton";
+import { useKuralLayout } from "@/hooks/useKuralLayout";
 import { Star } from "lucide-react";
 import { AnimatePresence, m } from "motion/react";
 import { Button } from "@/components/ui/button";

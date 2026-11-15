@@ -6,8 +6,8 @@ import React, {
   useRef,
   type ReactNode,
 } from "react";
-import { type ThemeType, THEME } from "../types/models";
-import { readThemeHint, themeItem, writeThemeHint } from "../utils/storage";
+import { type ThemeType, THEME } from "@/types/models";
+import { readThemeHint, themeItem, writeThemeHint } from "@/utils/storage";
 
 interface ThemeContextType {
   theme: ThemeType;

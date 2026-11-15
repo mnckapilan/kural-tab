@@ -1,10 +1,10 @@
 import React from "react";
-import { ThemeProvider } from "../context/ThemeContext";
-import { KuralProvider } from "../context/KuralContext";
-import ThemeToggle from "./ThemeToggle";
-import KuralDisplay from "./KuralDisplay";
-import ErrorBoundary from "./ErrorBoundary";
-import MotionProvider from "./MotionProvider";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { KuralProvider } from "@/context/KuralContext";
+import ThemeToggle from "@/components/ThemeToggle";
+import KuralDisplay from "@/components/KuralDisplay";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import MotionProvider from "@/components/MotionProvider";
 
 const App: React.FC = () => {
   return (

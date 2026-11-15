@@ -1,8 +1,8 @@
 import React from "react";
 import { Moon, Sun } from "lucide-react";
 import { AnimatePresence, m } from "motion/react";
-import { THEME } from "../types/models";
-import { useTheme } from "../context/ThemeContext";
+import { THEME } from "@/types/models";
+import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { ENTRANCE, FADE_IN, FADE_OUT } from "@/lib/motion";
 

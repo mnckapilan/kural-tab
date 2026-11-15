@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import type { Kural } from "../types/models";
+import type { Kural } from "@/types/models";
 
 interface KuralTextProps {
   kural: Kural;

@@ -10,9 +10,9 @@ import {
   type Kural,
   type KuralData,
   type KuralMetadataResult,
-} from "../types/models";
-import { KuralService } from "../services/kuralService";
-import { favouriteKuralsItem } from "../utils/storage";
+} from "@/types/models";
+import { KuralService } from "@/services/kuralService";
+import { favouriteKuralsItem } from "@/utils/storage";
 
 interface KuralContextType {
   kural: Kural | null;
