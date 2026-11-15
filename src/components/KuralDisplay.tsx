@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { useKural } from "@/context/KuralContext";
 import KuralText from "@/components/KuralText";
 import KuralMetadata from "@/components/KuralMetadata";
@@ -25,7 +25,7 @@ import {
 } from "@/lib/motion";
 import { useDelayedFlag } from "@/hooks/useDelayedFlag";
 
-const KuralDisplay: React.FC = () => {
+function KuralDisplay() {
   const {
     kural,
     metadata,
@@ -77,7 +77,7 @@ const KuralDisplay: React.FC = () => {
 
   const containerStyle =
     textWidth > 0
-      ? ({ "--kural-text-width": `${textWidth}px` } as React.CSSProperties)
+      ? ({ "--kural-text-width": `${textWidth}px` } as CSSProperties)
       : undefined;
 
   const starred = isFavourite(kural.Number);
@@ -230,6 +230,6 @@ const KuralDisplay: React.FC = () => {
       </m.div>
     </m.div>
   );
-};
+}
 
 export default KuralDisplay;

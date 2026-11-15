@@ -1,9 +1,11 @@
-import React, {
+import {
   createContext,
-  useState,
-  useContext,
+  use,
+  useCallback,
   useEffect,
+  useMemo,
   useRef,
+  useState,
   type ReactNode,
 } from "react";
 import { type ThemeType, THEME } from "@/types/models";
@@ -20,7 +22,7 @@ interface ThemeProviderProps {
   children: ReactNode;
 }
 
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+export function ThemeProvider({ children }: ThemeProviderProps) {
   // Start from the same theme public/theme-init.js already painted, so the
   // class effect below doesn't flip it back before storage resolves.
   const [theme, setTheme] = useState<ThemeType>(
@@ -73,26 +75,24 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     writeThemeHint(theme);
   }, [theme]);
 
-  const toggleTheme = (): void => {
+  const toggleTheme = useCallback((): void => {
     const newTheme = theme === THEME.DARK ? THEME.LIGHT : THEME.DARK;
     setTheme(newTheme);
 
     themeItem.setValue(newTheme).catch((error: unknown) => {
       console.error("Error saving theme:", error);
     });
-  };
+  }, [theme]);
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
+  const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);
 
-export const useTheme = (): ThemeContextType => {
-  const context = useContext(ThemeContext);
+  return <ThemeContext value={value}>{children}</ThemeContext>;
+}
+
+export function useTheme(): ThemeContextType {
+  const context = use(ThemeContext);
   if (context === undefined) {
     throw new Error("useTheme must be used within a ThemeProvider");
   }
   return context;
-};
+}

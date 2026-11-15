@@ -1,4 +1,3 @@
-import React from "react";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { KuralProvider } from "@/context/KuralContext";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -6,7 +5,7 @@ import KuralDisplay from "@/components/KuralDisplay";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import MotionProvider from "@/components/MotionProvider";
 
-const App: React.FC = () => {
+function App() {
   return (
     <ErrorBoundary>
       <MotionProvider>
@@ -18,9 +17,9 @@ const App: React.FC = () => {
       </MotionProvider>
     </ErrorBoundary>
   );
-};
+}
 
-const AppContent: React.FC = () => {
+function AppContent() {
   return (
     <div className="flex min-h-screen items-center justify-center text-center leading-[normal]">
       {/* Shrink-wrapped flex item: the couplet width is measured against it. */}
@@ -35,6 +34,6 @@ const AppContent: React.FC = () => {
       )}
     </div>
   );
-};
+}
 
 export default App;

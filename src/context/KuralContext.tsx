@@ -1,9 +1,10 @@
-import React, {
+import {
   createContext,
-  useState,
-  useContext,
+  use,
+  useCallback,
   useEffect,
   useMemo,
+  useState,
   type ReactNode,
 } from "react";
 import {
@@ -51,7 +52,7 @@ const loadKuralData = async (): Promise<LoadedKuralData> => {
   };
 };
 
-export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
+export function KuralProvider({ children }: KuralProviderProps) {
   const [loaded, setLoaded] = useState<LoadedKuralData | null>(null);
   const [kuralNumber, setKuralNumber] = useState<number | null>(null);
   const [favouriteKurals, setFavouriteKurals] = useState<number[]>([]);
@@ -111,7 +112,7 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
       ? null
       : (loaded?.metadataLookup.get(kuralNumber) ?? null);
 
-  const refreshKural = (): void => {
+  const refreshKural = useCallback((): void => {
     if (kuralData) {
       setKuralNumber(KuralService.getRandomKural(kuralData).Number);
     } else {
@@ -119,53 +120,71 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
       setError(null);
       setLoadAttempt((n) => n + 1);
     }
-  };
+  }, [kuralData]);
 
-  const selectKuralByNumber = (selected: number): void => {
-    if (kuralData?.kural.some((item) => item.Number === selected)) {
-      setKuralNumber(selected);
-    }
-  };
-
-  const isFavourite = (kuralNumber: number): boolean =>
-    favouriteKurals.includes(kuralNumber);
-
-  const toggleFavourite = (kuralNumber: number): void => {
-    const next = favouriteKurals.includes(kuralNumber)
-      ? favouriteKurals.filter((num) => num !== kuralNumber)
-      : [...favouriteKurals, kuralNumber];
-    const sorted = next.sort((a, b) => a - b);
-
-    setFavouriteKurals(sorted);
-    favouriteKuralsItem.setValue(sorted).catch((error: unknown) => {
-      console.error("Error saving favourite kurals:", error);
-    });
-  };
-
-  return (
-    <KuralContext.Provider
-      value={{
-        kural,
-        metadata,
-        kuralData,
-        favouriteKurals,
-        isLoading,
-        error,
-        refreshKural,
-        toggleFavourite,
-        isFavourite,
-        selectKuralByNumber,
-      }}
-    >
-      {children}
-    </KuralContext.Provider>
+  const selectKuralByNumber = useCallback(
+    (selected: number): void => {
+      if (kuralData?.kural.some((item) => item.Number === selected)) {
+        setKuralNumber(selected);
+      }
+    },
+    [kuralData],
   );
-};
 
-export const useKural = (): KuralContextType => {
-  const context = useContext(KuralContext);
+  const isFavourite = useCallback(
+    (num: number): boolean => favouriteKurals.includes(num),
+    [favouriteKurals],
+  );
+
+  const toggleFavourite = useCallback(
+    (num: number): void => {
+      const next = favouriteKurals.includes(num)
+        ? favouriteKurals.filter((n) => n !== num)
+        : [...favouriteKurals, num];
+      const sorted = next.sort((a, b) => a - b);
+
+      setFavouriteKurals(sorted);
+      favouriteKuralsItem.setValue(sorted).catch((error: unknown) => {
+        console.error("Error saving favourite kurals:", error);
+      });
+    },
+    [favouriteKurals],
+  );
+
+  const value = useMemo(
+    () => ({
+      kural,
+      metadata,
+      kuralData,
+      favouriteKurals,
+      isLoading,
+      error,
+      refreshKural,
+      toggleFavourite,
+      isFavourite,
+      selectKuralByNumber,
+    }),
+    [
+      kural,
+      metadata,
+      kuralData,
+      favouriteKurals,
+      isLoading,
+      error,
+      refreshKural,
+      toggleFavourite,
+      isFavourite,
+      selectKuralByNumber,
+    ],
+  );
+
+  return <KuralContext value={value}>{children}</KuralContext>;
+}
+
+export function useKural(): KuralContextType {
+  const context = use(KuralContext);
   if (context === undefined) {
     throw new Error("useKural must be used within a KuralProvider");
   }
   return context;
-};
+}

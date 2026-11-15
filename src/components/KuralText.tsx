@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import type { Kural } from "@/types/models";
 
 interface KuralTextProps {
@@ -8,7 +8,7 @@ interface KuralTextProps {
 
 const LINE_CLASS = "break-keep whitespace-nowrap [overflow-wrap:normal]";
 
-const KuralText: React.FC<KuralTextProps> = ({ kural, onLayoutChanged }) => {
+function KuralText({ kural, onLayoutChanged }: KuralTextProps) {
   const kuralRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,6 +38,6 @@ const KuralText: React.FC<KuralTextProps> = ({ kural, onLayoutChanged }) => {
       <div className={LINE_CLASS}>{kural.Line2}</div>
     </div>
   );
-};
+}
 
 export default KuralText;

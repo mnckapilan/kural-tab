@@ -1,4 +1,3 @@
-import React from "react";
 import type { KuralMetadataResult } from "@/types/models";
 
 interface KuralMetadataProps {
@@ -8,7 +7,7 @@ interface KuralMetadataProps {
 const METADATA_CLASS =
   "mb-[15px] min-h-5 text-left text-base text-muted-foreground max-[600px]:mb-2.5 max-[600px]:text-xs";
 
-const KuralMetadata: React.FC<KuralMetadataProps> = ({ metadata }) => {
+function KuralMetadata({ metadata }: KuralMetadataProps) {
   if (!metadata) {
     return (
       <div className={METADATA_CLASS} data-testid="kural-metadata">
@@ -34,6 +33,6 @@ const KuralMetadata: React.FC<KuralMetadataProps> = ({ metadata }) => {
       </a>
     </div>
   );
-};
+}
 
 export default KuralMetadata;
