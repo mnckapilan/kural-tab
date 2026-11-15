@@ -1,10 +1,10 @@
 // kuralService.ts - Service for fetching and processing Kural data
 
 import {
-    Kural,
-    KuralData,
-    MetadataSection,
-    KuralMetadataResult,
+    type Kural,
+    type KuralData,
+    type MetadataSection,
+    type KuralMetadataResult,
     FILE_PATHS
 } from '../types/models';
 
@@ -12,7 +12,7 @@ import {
  * Custom error for Kural data operations
  */
 export class KuralDataError extends Error {
-    public readonly cause: unknown;
+    public override readonly cause: unknown;
 
     constructor(message: string, cause?: unknown) {
         super(message);
@@ -74,7 +74,11 @@ export class KuralService {
      */
     public static getRandomKural(kuralData: KuralData): Kural {
         const randomIndex = Math.floor(Math.random() * kuralData.kural.length);
-        return kuralData.kural[randomIndex];
+        const kural = kuralData.kural[randomIndex];
+        if (!kural) {
+            throw new KuralDataError('Kural data is empty');
+        }
+        return kural;
     }
 
     /**

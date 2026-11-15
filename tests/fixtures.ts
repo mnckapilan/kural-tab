@@ -1,7 +1,7 @@
-import { test as base, chromium, BrowserContext } from "@playwright/test";
+import { test as base, chromium, type BrowserContext } from "@playwright/test";
 import path from "path";
 
-const EXTENSION_PATH = path.join(__dirname, "../dist");
+const EXTENSION_PATH = path.join(__dirname, "../.output/chrome-mv3");
 
 export const test = base.extend<{
   context: BrowserContext;
@@ -27,6 +27,9 @@ export const test = base.extend<{
       background = await context.waitForEvent("serviceworker");
     }
     const extensionId = background.url().split("/")[2];
+    if (!extensionId) {
+      throw new Error(`Could not derive extension ID from ${background.url()}`);
+    }
     await use(extensionId);
   },
 });

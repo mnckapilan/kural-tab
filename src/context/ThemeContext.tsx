@@ -3,9 +3,10 @@ import React, {
   useState,
   useContext,
   useEffect,
-  ReactNode,
+  type ReactNode,
 } from "react";
-import { ThemeType, THEME } from "../types/models";
+import { type ThemeType, THEME } from "../types/models";
+import { themeItem } from "../utils/storage";
 
 interface ThemeContextType {
   theme: ThemeType;
@@ -28,16 +29,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
     const getSavedTheme = async (): Promise<void> => {
       try {
-        if (
-          typeof window !== "undefined" &&
-          window.chrome &&
-          window.chrome.storage &&
-          window.chrome.storage.sync
-        ) {
-          const data = await window.chrome.storage.sync.get("theme");
-          const savedTheme = (data.theme as ThemeType) || THEME.DARK;
-          setTheme(savedTheme);
-        }
+        setTheme(await themeItem.getValue());
       } catch (error: unknown) {
         console.error("Error retrieving theme from storage:", error);
       } finally {
@@ -54,6 +46,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     };
 
     void getSavedTheme();
+
+    // Keep other open new-tab pages in sync
+    return themeItem.watch((newTheme) => {
+      setTheme(newTheme);
+    });
   }, []);
 
   useEffect(() => {
@@ -70,18 +67,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     const newTheme = theme === THEME.DARK ? THEME.LIGHT : THEME.DARK;
     setTheme(newTheme);
 
-    if (
-      typeof window !== "undefined" &&
-      window.chrome &&
-      window.chrome.storage &&
-      window.chrome.storage.sync
-    ) {
-      window.chrome.storage.sync
-        .set({ theme: newTheme })
-        .catch((error: unknown) => {
-          console.error("Error saving theme:", error);
-        });
-    }
+    themeItem.setValue(newTheme).catch((error: unknown) => {
+      console.error("Error saving theme:", error);
+    });
   };
 
   if (isLoading) {

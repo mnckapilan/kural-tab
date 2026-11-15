@@ -37,10 +37,9 @@ export default tseslint.config(
   // Ignore build output, deps, and config files that aren't TS
   {
     ignores: [
-      "dist/",
+      ".output/",
+      ".wxt/",
       "node_modules/",
-      "webpack.*.js",
-      "babel.config.js",
       "eslint.config.mjs",
     ],
   },

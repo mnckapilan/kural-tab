@@ -3,14 +3,15 @@ import React, {
   useState,
   useContext,
   useEffect,
-  ReactNode,
+  type ReactNode,
 } from "react";
 import {
-  Kural,
-  KuralData,
-  KuralMetadataResult,
+  type Kural,
+  type KuralData,
+  type KuralMetadataResult,
 } from "../types/models";
 import { KuralService } from "../services/kuralService";
+import { favouriteKuralsItem } from "../utils/storage";
 
 interface KuralContextType {
   kural: Kural | null;
@@ -43,24 +44,18 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
   useEffect(() => {
     const loadFavouriteKurals = async (): Promise<void> => {
       try {
-        if (
-          typeof window !== "undefined" &&
-          window.chrome &&
-          window.chrome.storage &&
-          window.chrome.storage.sync
-        ) {
-          const data = await window.chrome.storage.sync.get("favouriteKurals");
-          const stored = Array.isArray(data.favouriteKurals)
-            ? data.favouriteKurals
-            : [];
-          setFavouriteKurals(stored);
-        }
+        setFavouriteKurals(await favouriteKuralsItem.getValue());
       } catch (error: unknown) {
         console.error("Error retrieving favourite kurals from storage:", error);
       }
     };
 
     void loadFavouriteKurals();
+
+    // Keep other open new-tab pages in sync
+    return favouriteKuralsItem.watch((next) => {
+      setFavouriteKurals(next);
+    });
   }, []);
 
   const fetchKural = async (): Promise<void> => {
@@ -74,7 +69,12 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
       if (!currentKuralData || !currentMetadataLookup) {
         const fetched = await KuralService.fetchKuralData();
         currentKuralData = fetched.kuralData;
-        currentMetadataLookup = KuralService.buildMetadataLookup(fetched.metadataData[0]);
+        // metadata.json is a one-element array holding the திருக்குறள் root section
+        const metadataRoot = fetched.metadataData[0];
+        if (!metadataRoot) {
+          throw new Error("Metadata root section is missing");
+        }
+        currentMetadataLookup = KuralService.buildMetadataLookup(metadataRoot);
         setKuralData(currentKuralData);
         setMetadataLookup(currentMetadataLookup);
       }
@@ -116,26 +116,14 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
     favouriteKurals.includes(kuralNumber);
 
   const toggleFavourite = (kuralNumber: number): void => {
-    setFavouriteKurals((prev) => {
-      const next = prev.includes(kuralNumber)
-        ? prev.filter((num) => num !== kuralNumber)
-        : [...prev, kuralNumber];
-      const sorted = next.slice().sort((a, b) => a - b);
+    const next = favouriteKurals.includes(kuralNumber)
+      ? favouriteKurals.filter((num) => num !== kuralNumber)
+      : [...favouriteKurals, kuralNumber];
+    const sorted = next.sort((a, b) => a - b);
 
-      if (
-        typeof window !== "undefined" &&
-        window.chrome &&
-        window.chrome.storage &&
-        window.chrome.storage.sync
-      ) {
-        window.chrome.storage.sync
-          .set({ favouriteKurals: sorted })
-          .catch((error: unknown) => {
-            console.error("Error saving favourite kurals:", error);
-          });
-      }
-
-      return sorted;
+    setFavouriteKurals(sorted);
+    favouriteKuralsItem.setValue(sorted).catch((error: unknown) => {
+      console.error("Error saving favourite kurals:", error);
     });
   };
 
