@@ -16,7 +16,7 @@ export default tseslint.config(
     rules: {
       ...reactPlugin.configs.recommended.rules,
       "react/react-in-jsx-scope": "off", // Not needed with React 17+ JSX transform
-      "react/prop-types": "off",          // We use TypeScript for prop types
+      "react/prop-types": "off", // We use TypeScript for prop types
     },
     settings: {
       react: { version: "detect" },
@@ -36,11 +36,6 @@ export default tseslint.config(
 
   // Ignore build output, deps, and config files that aren't TS
   {
-    ignores: [
-      ".output/",
-      ".wxt/",
-      "node_modules/",
-      "eslint.config.mjs",
-    ],
+    ignores: [".output/", ".wxt/", "node_modules/", "eslint.config.mjs"],
   },
 );

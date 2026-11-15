@@ -1,10 +1,8 @@
-
 ![Banner](assets/banner.png)
 
 # Kural Tab
 
 Kural Tab is a Chrome extension that replaces your new tab page with a random Thirukkural couplet, offering timeless wisdom each time you open a new tab.
-
 
 ## Features
 
@@ -30,13 +28,13 @@ npm install
 
 ### Commands
 
-| Command | What it does |
-|---------|-------------|
-| `npm start` | WXT dev mode: watch build into `.output/chrome-mv3-dev/` with HMR; also launches a Chrome window with the extension loaded |
-| `npm run build` | One-off production build into `.output/chrome-mv3/` |
-| `npm test` | Builds then runs the full Playwright end-to-end test suite in a real Chrome window |
-| `npm run zip` | Production build + zip (`wxt zip`) into `.output/kural-tab-<version>-chrome.zip`, ready for Chrome Web Store upload |
-| `npm run submit` | Upload a zip to the Chrome Web Store (`wxt submit`); CI runs this on version tags |
+| Command          | What it does                                                                                                               |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `npm start`      | WXT dev mode: watch build into `.output/chrome-mv3-dev/` with HMR; also launches a Chrome window with the extension loaded |
+| `npm run build`  | One-off production build into `.output/chrome-mv3/`                                                                        |
+| `npm test`       | Builds then runs the full Playwright end-to-end test suite in a real Chrome window                                         |
+| `npm run zip`    | Production build + zip (`wxt zip`) into `.output/kural-tab-<version>-chrome.zip`, ready for Chrome Web Store upload        |
+| `npm run submit` | Upload a zip to the Chrome Web Store (`wxt submit`); CI runs this on version tags                                          |
 
 ### Loading the extension in Chrome
 

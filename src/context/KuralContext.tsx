@@ -36,7 +36,10 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
   const [kural, setKural] = useState<Kural | null>(null);
   const [metadata, setMetadata] = useState<KuralMetadataResult | null>(null);
   const [kuralData, setKuralData] = useState<KuralData | null>(null);
-  const [metadataLookup, setMetadataLookup] = useState<Map<number, KuralMetadataResult> | null>(null);
+  const [metadataLookup, setMetadataLookup] = useState<Map<
+    number,
+    KuralMetadataResult
+  > | null>(null);
   const [favouriteKurals, setFavouriteKurals] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +88,7 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
     } catch (err) {
       console.error("Error loading Thirukkural:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to load Thirukkural"
+        err instanceof Error ? err.message : "Failed to load Thirukkural",
       );
       setKural(null);
       setMetadata(null);
@@ -105,7 +108,7 @@ export const KuralProvider: React.FC<KuralProviderProps> = ({ children }) => {
   const selectKuralByNumber = (kuralNumber: number): void => {
     if (!kuralData || !metadataLookup) return;
     const selected = kuralData.kural.find(
-      (item) => item.Number === kuralNumber
+      (item) => item.Number === kuralNumber,
     );
     if (!selected) return;
     setKural(selected);

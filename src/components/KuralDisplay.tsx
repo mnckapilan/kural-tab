@@ -6,6 +6,24 @@ import KuralExplanation from "./KuralExplanation";
 import KuralMeaning from "./KuralMeaning";
 import KuralSkeleton from "./KuralSkeleton";
 import { useKuralLayout } from "../hooks/useKuralLayout";
+import { Star } from "lucide-react";
+import { AnimatePresence, m } from "motion/react";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { QUOTE_CONTAINER } from "@/lib/styles";
+import { cn } from "@/lib/utils";
+import {
+  ENTRANCE_CONTAINER,
+  ENTRANCE_ITEM,
+  FADE_IN,
+  FADE_OUT,
+  SKELETON_DELAY_MS,
+} from "@/lib/motion";
+import { useDelayedFlag } from "@/hooks/useDelayedFlag";
 
 const KuralDisplay: React.FC = () => {
   const {
@@ -22,6 +40,9 @@ const KuralDisplay: React.FC = () => {
   } = useKural();
   const { textWidth, handleLayoutChange } = useKuralLayout();
   const [showFavourites, setShowFavourites] = useState(false);
+  // Bumped on each star click so the "pop" plays only on user toggles, not on navigation.
+  const [starToggles, setStarToggles] = useState(0);
+  const showSkeleton = useDelayedFlag(isLoading, SKELETON_DELAY_MS);
 
   const favouriteItems = useMemo(() => {
     if (!kuralData) return [];
@@ -31,109 +52,183 @@ const KuralDisplay: React.FC = () => {
       .filter((item): item is NonNullable<typeof item> => Boolean(item));
   }, [kuralData, favouriteKurals]);
 
+  // Fast loads render nothing (just the page background) and then fade the
+  // kural in; the skeleton only appears if loading is genuinely slow.
   if (isLoading) {
-    return <KuralSkeleton />;
+    return showSkeleton ? <KuralSkeleton /> : null;
   }
 
   if (error || !kural) {
     return (
-      <div className="error">
+      <div className="flex flex-col items-center gap-3 text-quote">
         <div>Failed to load Thirukkural</div>
-        {error && <div className="error-message">{error}</div>}
-        <button onClick={refreshKural} className="retry-button">
+        {error && <div className="text-sm text-muted-foreground">{error}</div>}
+        <Button
+          variant="muted"
+          size="md"
+          className="px-4"
+          onClick={refreshKural}
+        >
           Try Again
-        </button>
+        </Button>
       </div>
     );
   }
 
-  const containerStyle = textWidth > 0
-    ? ({ "--kural-text-width": `${textWidth}px` } as React.CSSProperties)
-    : undefined;
+  const containerStyle =
+    textWidth > 0
+      ? ({ "--kural-text-width": `${textWidth}px` } as React.CSSProperties)
+      : undefined;
+
+  const starred = isFavourite(kural.Number);
 
   return (
-    <div className="quote-container" style={containerStyle}>
-      <div className="quote-number">
-        <span>{kural.Number}</span>
-        <button
+    <m.div
+      className={QUOTE_CONTAINER}
+      style={containerStyle}
+      variants={ENTRANCE_CONTAINER}
+      initial="hidden"
+      animate="show"
+    >
+      <m.div
+        variants={ENTRANCE_ITEM}
+        className="mb-[15px] flex items-center gap-2.5 text-left text-[28px] text-muted-foreground max-[600px]:mb-2.5 max-[600px]:text-xs"
+        data-testid="kural-number"
+      >
+        <span data-testid="kural-number-value">{kural.Number}</span>
+        <Button
           type="button"
-          className="refresh-button"
+          variant="muted"
+          size="pill"
           onClick={refreshKural}
           aria-label="Randomize kural"
         >
           Randomise
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={`star-button ${isFavourite(kural.Number) ? "is-starred" : ""}`}
-          onClick={() => toggleFavourite(kural.Number)}
-          aria-pressed={isFavourite(kural.Number)}
-          aria-label={
-            isFavourite(kural.Number)
-              ? "Remove from favourites"
-              : "Add to favourites"
-          }
+          variant="muted"
+          size="icon-round"
+          className={cn(starred && "border-foreground text-foreground")}
+          onClick={() => {
+            toggleFavourite(kural.Number);
+            setStarToggles((n) => n + 1);
+          }}
+          aria-pressed={starred}
+          aria-label={starred ? "Remove from favourites" : "Add to favourites"}
         >
-          <svg
-            className="star-icon"
-            viewBox="0 0 24 24"
-            width="16"
-            height="16"
-            aria-hidden="true"
+          <m.span
+            key={starToggles}
+            className="flex"
+            initial={starred && starToggles > 0 ? { scale: 0.6 } : false}
+            animate={{
+              scale: 1,
+              transition: { type: "spring", duration: 0.3, bounce: 0.5 },
+            }}
+            whileTap={{ scale: 0.85 }}
           >
-            <path d="M12 3.2l2.62 5.3 5.85.85-4.24 4.13 1 5.83L12 16.9 6.77 19.3l1-5.83L3.5 9.35l5.88-.85L12 3.2z" />
-          </svg>
-        </button>
-      </div>
+            <Star
+              aria-hidden="true"
+              className={cn(starred && "fill-current")}
+            />
+          </m.span>
+        </Button>
+      </m.div>
 
-      <KuralMetadata metadata={metadata} />
+      {/*
+        Couplet swap: `wait` guarantees only one block (and one set of test ids)
+        exists at a time, so the new KuralText measures itself after it mounts
+        and `--kural-text-width` is only updated for the new couplet. The number
+        row above updates instantly. `initial={false}` skips the first mount,
+        which the staggered entrance already covers.
+      */}
+      <m.div variants={ENTRANCE_ITEM}>
+        <AnimatePresence initial={false} mode="wait">
+          <m.div
+            key={kural.Number}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0, transition: FADE_IN }}
+            exit={{ opacity: 0, y: -4, transition: FADE_OUT }}
+          >
+            <KuralMetadata metadata={metadata} />
 
-      <KuralText kural={kural} onLayoutChanged={handleLayoutChange} />
+            <KuralText kural={kural} onLayoutChanged={handleLayoutChange} />
 
-      <KuralExplanation explanation={kural.Translation} />
+            <KuralExplanation explanation={kural.Translation} />
 
-      <KuralMeaning meaning={kural.mv} />
+            <KuralMeaning meaning={kural.mv} />
+          </m.div>
+        </AnimatePresence>
+      </m.div>
 
-      <div className="favourites-section">
-        <button
-          type="button"
-          className="favourites-toggle"
-          onClick={() => setShowFavourites((prev) => !prev)}
-          disabled={favouriteItems.length === 0 && !showFavourites}
-        >
-          {showFavourites ? "Hide Favourites" : "See Favourites"}
-        </button>
-        {showFavourites && (
-          <div className="favourites-list">
-            {favouriteItems.length === 0 && (
-              <div className="favourites-empty">No favourites yet.</div>
-            )}
-            {favouriteItems.map((item) => (
-              <div key={item.Number} className="favourites-item">
-                <button
-                  type="button"
-                  className="favourites-select"
-                  onClick={() => selectKuralByNumber(item.Number)}
+      <m.div variants={ENTRANCE_ITEM} className="mt-5 text-left">
+        <Popover open={showFavourites} onOpenChange={setShowFavourites}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="muted"
+              size="md"
+              disabled={favouriteItems.length === 0 && !showFavourites}
+            >
+              {showFavourites ? "Hide Favourites" : "See Favourites"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            sideOffset={12}
+            className="w-[min(640px,90vw)] rounded-lg border-border p-0 shadow-none"
+          >
+            <div
+              className="flex max-h-80 [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent] flex-col gap-2 overflow-y-auto p-2.5"
+              data-testid="favourites-list"
+            >
+              {favouriteItems.length === 0 && (
+                <div className="text-sm text-muted-foreground">
+                  No favourites yet.
+                </div>
+              )}
+              {favouriteItems.map((item) => (
+                <div
+                  key={item.Number}
+                  className="flex items-stretch gap-2 rounded-md border border-border text-quote hover:border-quote hover:text-foreground"
+                  data-testid="favourites-item"
                 >
-                  <span className="favourites-number">{item.Number}</span>
-                  <span className="favourites-text">
-                    <span className="favourites-line">{item.Line1}</span>
-                    <span className="favourites-line">{item.Line2}</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className="favourites-remove"
-                  onClick={() => toggleFavourite(item.Number)}
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-auto flex-1 justify-start gap-2.5 px-2.5 py-2 text-left font-light"
+                    onClick={() => {
+                      selectKuralByNumber(item.Number);
+                      setShowFavourites(false);
+                    }}
+                  >
+                    <span className="min-w-[26px] text-center text-xs text-muted-foreground">
+                      {item.Number}
+                    </span>
+                    <span className="flex flex-col gap-0.5">
+                      <span className="block text-sm [overflow-wrap:normal] break-keep whitespace-nowrap">
+                        {item.Line1}
+                      </span>
+                      <span className="block text-sm [overflow-wrap:normal] break-keep whitespace-nowrap">
+                        {item.Line2}
+                      </span>
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-auto px-2.5 py-2 text-xs font-light text-muted-foreground hover:text-foreground"
+                    onClick={() => toggleFavourite(item.Number)}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </m.div>
+    </m.div>
   );
 };
 

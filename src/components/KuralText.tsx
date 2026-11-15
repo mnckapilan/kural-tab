@@ -6,6 +6,8 @@ interface KuralTextProps {
   onLayoutChanged?: (width: number) => void;
 }
 
+const LINE_CLASS = "break-keep whitespace-nowrap [overflow-wrap:normal]";
+
 const KuralText: React.FC<KuralTextProps> = ({ kural, onLayoutChanged }) => {
   const kuralRef = useRef<HTMLDivElement>(null);
 
@@ -27,9 +29,13 @@ const KuralText: React.FC<KuralTextProps> = ({ kural, onLayoutChanged }) => {
   }, [kural, onLayoutChanged]);
 
   return (
-    <div className="quote-text" ref={kuralRef}>
-      <div>{kural.Line1}</div>
-      <div>{kural.Line2}</div>
+    <div
+      className="mb-5 min-h-[30px] text-left font-tamil text-[32px] leading-[1.4] text-quote max-[600px]:text-[20px]"
+      data-testid="kural-text"
+      ref={kuralRef}
+    >
+      <div className={LINE_CLASS}>{kural.Line1}</div>
+      <div className={LINE_CLASS}>{kural.Line2}</div>
     </div>
   );
 };

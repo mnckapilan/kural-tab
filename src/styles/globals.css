@@ -1,0 +1,168 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+ * Dark mode is a `.dark` class on <html> (the shadcn/ui convention), toggled by
+ * ThemeContext. Light mode is the absence of the class.
+ */
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Self-hosted Noto Sans Tamil (weight 300 — the only weight used anywhere in
+ * the app). Subsetted to the Tamil unicode range only; ASCII punctuation in
+ * the couplets falls back to Arial via the font-family list. The file lives at
+ * public/fonts/, which WXT/Vite copies verbatim to the build output root. The
+ * url() is an absolute public path ("/fonts/..."): Vite leaves it untouched,
+ * and inside the extension it resolves against the extension origin root.
+ * Do not turn it into a relative "../" path. See CLAUDE.md "Styling".
+ */
+@font-face {
+  font-family: "Noto Sans Tamil";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/fonts/NotoSansTamil-Light.woff2") format("woff2");
+  unicode-range: U+0964-0965, U+0B82-0BFA, U+200C-200D, U+20B9, U+25CC;
+}
+
+/*
+ * Design tokens. Raw values live here as CSS variables (so light/dark can swap
+ * them), and are exposed to Tailwind via @theme inline below, which generates
+ * utilities like bg-background, text-muted-foreground, border-border.
+ *
+ * Semantic mapping from the original palette:
+ *   background        page background
+ *   foreground        primary text, hover/active state
+ *   quote             couplet + translation text (between fg and muted)
+ *   muted-foreground  metadata, secondary text, idle buttons
+ *   border            hairlines, outlines, the metadata "tree"
+ *
+ * If you change background/foreground, also update the inline critical CSS in
+ * src/entrypoints/newtab/index.html.
+ */
+:root {
+  color-scheme: light;
+  --background: #d4d4d4;
+  --foreground: #1a1a1a;
+  --quote: #333333;
+  --muted-foreground: #434343;
+  --border: #494949;
+
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --popover: var(--background);
+  --popover-foreground: var(--foreground);
+  --primary: var(--foreground);
+  --primary-foreground: var(--background);
+  --secondary: color-mix(in oklab, var(--foreground) 8%, var(--background));
+  --secondary-foreground: var(--foreground);
+  --muted: color-mix(in oklab, var(--foreground) 8%, var(--background));
+  --accent: color-mix(in oklab, var(--foreground) 8%, var(--background));
+  --accent-foreground: var(--foreground);
+  --destructive: #b42318;
+  --input: var(--border);
+  --ring: var(--muted-foreground);
+  --radius: 0.5rem;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #1a1a1a;
+  --foreground: #f2f2f2;
+  --quote: #cccccc;
+  --muted-foreground: #999999;
+  --border: #555555;
+  --destructive: #f97066;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-quote: var(--quote);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: "Helvetica Neue", Arial, sans-serif;
+  --font-tamil: "Noto Sans Tamil", Arial, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html,
+  body {
+    @apply h-full;
+  }
+
+  /* The page background is on <html> as well as <body>: Chrome can paint
+     before <body> exists, and would otherwise show its default canvas
+     (white in light mode). Matches the inline critical CSS in newtab.html. */
+  html {
+    @apply bg-background;
+  }
+
+  body {
+    @apply bg-background font-sans font-light text-foreground;
+    font-size: 18px;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Applied by ThemeContext on first paint so the stored theme doesn't animate in. */
+  .no-transition,
+  .no-transition *,
+  .no-transition *::before,
+  .no-transition *::after {
+    transition: none !important;
+  }
+}
+
+/*
+ * Chrome's built-in stylesheet for extension pages sets
+ * `body { font-family: system-ui, sans-serif }` and wins over rules inside
+ * @layer, so the font family has to be declared outside any layer.
+ */
+body {
+  @apply font-sans;
+}
+
+@theme {
+  --animate-skeleton: skeleton-pulse 1.5s ease-in-out infinite;
+
+  @keyframes skeleton-pulse {
+    0%,
+    100% {
+      opacity: 0.25;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+}

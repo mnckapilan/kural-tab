@@ -1,0 +1,7 @@
+.output/
+.wxt/
+node_modules/
+playwright-report/
+test-results/
+public/data/
+package-lock.json

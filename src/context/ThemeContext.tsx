@@ -6,7 +6,7 @@ import React, {
   type ReactNode,
 } from "react";
 import { type ThemeType, THEME } from "../types/models";
-import { themeItem } from "../utils/storage";
+import { readThemeHint, themeItem, writeThemeHint } from "../utils/storage";
 
 interface ThemeContextType {
   theme: ThemeType;
@@ -20,7 +20,11 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setTheme] = useState<ThemeType>(THEME.DARK);
+  // Start from the same theme public/theme-init.js already painted, so the
+  // class effect below doesn't flip it back before storage resolves.
+  const [theme, setTheme] = useState<ThemeType>(
+    () => readThemeHint() ?? THEME.DARK,
+  );
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -54,13 +58,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (theme === THEME.LIGHT) {
-      document.body.classList.add("light-mode");
-      document.body.classList.remove("dark-mode");
-    } else {
-      document.body.classList.add("dark-mode");
-      document.body.classList.remove("light-mode");
-    }
+    document.documentElement.dataset.theme =
+      theme === THEME.LIGHT ? "light" : "dark";
+    document.documentElement.classList.toggle("dark", theme === THEME.DARK);
+    writeThemeHint(theme);
   }, [theme]);
 
   const toggleTheme = (): void => {
@@ -72,8 +73,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     });
   };
 
+  // Storage resolves in a few ms; render nothing (the inline critical CSS
+  // already paints the background) rather than flashing a loading message.
   if (isLoading) {
-    return <div className="loading">Loading...</div>;
+    return null;
   }
 
   return (

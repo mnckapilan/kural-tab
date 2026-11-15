@@ -5,7 +5,12 @@ interface KuralMeaningProps {
 }
 
 const KuralMeaning: React.FC<KuralMeaningProps> = ({ meaning }) => (
-  <div className="quote-mv">{meaning}</div>
+  <div
+    className="mb-5 w-[var(--kural-text-width,auto)] text-left text-[20px] leading-normal text-quote max-[600px]:text-base"
+    data-testid="kural-meaning"
+  >
+    {meaning}
+  </div>
 );
 
 export default KuralMeaning;

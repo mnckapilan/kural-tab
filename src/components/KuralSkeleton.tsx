@@ -1,16 +1,26 @@
 import React from "react";
+import { QUOTE_CONTAINER } from "@/lib/styles";
+import { cn } from "@/lib/utils";
+import { m } from "motion/react";
+import { ENTRANCE } from "@/lib/motion";
+
+const bar = "animate-skeleton rounded-sm bg-quote";
 
 const KuralSkeleton: React.FC = () => (
-  <div className="quote-container">
-    <div className="skeleton-number" />
-    <div className="skeleton-metadata" />
-    <div className="skeleton-text">
-      <div className="skeleton-line" />
-      <div className="skeleton-line skeleton-line--short" />
+  <m.div
+    className={QUOTE_CONTAINER}
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1, transition: ENTRANCE }}
+  >
+    <div className={cn(bar, "mb-[15px] h-7 w-[140px]")} />
+    <div className={cn(bar, "mb-[15px] h-[38px] w-[220px]")} />
+    <div className="mb-5">
+      <div className={cn(bar, "mb-2 h-[38px] w-4/5 max-w-[500px]")} />
+      <div className={cn(bar, "mb-2 h-[38px] w-[65%] max-w-[410px]")} />
     </div>
-    <div className="skeleton-block" />
-    <div className="skeleton-block skeleton-block--short" />
-  </div>
+    <div className={cn(bar, "mb-5 h-[58px] w-4/5 max-w-[500px]")} />
+    <div className={cn(bar, "mb-5 h-[58px] w-[65%] max-w-[410px]")} />
+  </m.div>
 );
 
 export default KuralSkeleton;
