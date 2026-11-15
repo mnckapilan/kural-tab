@@ -67,8 +67,7 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
   other open new-tab pages stay in sync.
 - `src/context/ThemeContext.tsx` — Owns light/dark theme (defaults to dark). Persists via `themeItem` (also `.watch()`ed
   across open tabs). Toggles the `dark` class on `<html>` (shadcn convention; light = no class) plus a
-  `data-theme="dark|light"` attribute the tests assert on, mirrors the theme into a `localStorage` copy for `public/theme-init.js` (see Styling), and puts a temporary `no-transition` class on
-  `body` to prevent a flash on load. Renders nothing until storage resolves (a few ms; the inline critical CSS already paints the background).
+  `data-theme="dark|light"` attribute the tests assert on, mirrors the theme into a `localStorage` copy for `public/theme-init.js` (see Styling), and never blocks rendering: it initialises from the synchronous `localStorage` hint, then lets `themeItem.getValue()` correct it when storage resolves. If that correction changes the theme (hint missing/stale), the class/attribute update runs with a temporary `no-transition` class on `body` (add, flush with a forced reflow, remove, all synchronously in the effect) so the body background doesn't animate; normal user toggles still animate.
 
 Storage items live in `src/utils/storage.ts`, defined with `@wxt-dev/storage` (`storage` from `#imports`):
 `themeItem` (`sync:theme`, fallback `THEME.DARK`) and `favouriteKuralsItem` (`sync:favouriteKurals`, fallback

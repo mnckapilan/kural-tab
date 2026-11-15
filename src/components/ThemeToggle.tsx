@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ENTRANCE, FADE_IN, FADE_OUT } from "@/lib/motion";
 
 // Sun/Moon swap with a rotate + fade. `initial={false}` skips the animation on
-// first render (same intent as the `no-transition` flash prevention).
+// first render.
 const ThemeToggle: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
 

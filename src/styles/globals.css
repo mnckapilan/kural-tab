@@ -135,7 +135,7 @@
     cursor: pointer;
   }
 
-  /* Applied by ThemeContext on first paint so the stored theme doesn't animate in. */
+  /* Applied briefly by ThemeContext when storage corrects the first-paint theme, so that change doesn't animate. */
   .no-transition,
   .no-transition *,
   .no-transition *::before,
