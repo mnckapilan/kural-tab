@@ -79,7 +79,8 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
   initial pick waits until both the data and the content settings have loaded (adjusted during render, since the
   `set-state-in-effect` lint rule forbids an effect). A kural reached directly (`#42`, jump-to-number, a favourite) is
   shown even if hidden: the hash stays `#<n>`, the number row stays, and `isCurrentHidden` makes `KuralDisplay` render
-  `HiddenKuralNotice` instead of the couplet block (live: changing settings flips it). If the pool is empty
+  `HiddenKuralNotice` instead of the couplet block (live: changing settings flips it). The notice only has an
+  "Open settings" button; the number row's Randomise, still on screen, moves on to a visible kural. If the pool is empty
   (`allHidden`) and nothing is selected, `KuralDisplay` shows "All kurals are hidden by your settings" +
   "Open settings" (`data-testid="kural-all-hidden"`; unreachable through the settings UI, which forbids it, but possible
   via hand-edited or synced storage). `isKuralHidden(n)` is also used by the favourites list.
@@ -286,8 +287,8 @@ make it relative to the CSS file.
   Radix single `ToggleGroup`s are `role="radiogroup"` with `radio` items (not `group`). `playwright.config.ts` sets
   `actionTimeout: 10000` so a locator that never matches fails fast. An `afterEach` resets appearance and theme.
 - `content.spec.ts` — Content settings end to end: each display switch hides/shows its element on an already-open new tab, hiding
-  Love keeps 40 randomises within 1-1080, a `#1100` deep link and jump-to-number show `kural-hidden-notice` (whose Randomise
-  lands on a visible kural; scope it to the notice, since the number row has a Randomise button too), hidden favourites carry a
+  Love keeps 40 randomises within 1-1080, a `#1100` deep link and jump-to-number show `kural-hidden-notice` (which only
+  offers Open settings; the number row's Randomise then lands on a visible kural), hidden favourites carry a
   "Hidden" label, hiding every section is blocked, and hiding the current kural's chapter flips an open tab to the notice live.
   Each test gets a fresh profile, so no storage cleanup is needed.
 - `newtab.spec.ts` — Navigates to `chrome-extension://<id>/newtab.html` and covers rendering, kural number

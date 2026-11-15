@@ -112,7 +112,10 @@ test.describe("Content settings", () => {
       notice.getByRole("button", { name: "Open settings" }),
     ).toBeVisible();
 
-    await notice.getByRole("button", { name: "Randomise" }).click();
+    await expect(notice.getByRole("button", { name: "Randomise" })).toHaveCount(
+      0,
+    );
+    await newTab.getByRole("button", { name: "Randomise" }).click();
     await expect(newTab.getByTestId("kural-text")).toBeVisible();
     await expect(notice).toHaveCount(0);
     expect(await kuralNumber(newTab)).toBeLessThanOrEqual(1080);
@@ -153,7 +156,7 @@ test.describe("Content settings", () => {
     await expect(item).toContainText("Hidden");
 
     // Navigating to it still works (and shows the notice)
-    await newTab.getByRole("button", { name: "Randomise" }).first().click();
+    await newTab.getByRole("button", { name: "Randomise" }).click();
     await expect(newTab.getByTestId("kural-hidden-notice")).toHaveCount(0);
     await newTab.getByRole("button", { name: "See Favourites" }).click();
     await item.getByRole("button").first().click();
