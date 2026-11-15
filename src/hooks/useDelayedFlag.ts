@@ -8,12 +8,12 @@ export const useDelayedFlag = (flag: boolean, delayMs: number): boolean => {
   const [delayed, setDelayed] = useState(false);
 
   useEffect(() => {
-    if (!flag) {
-      setDelayed(false);
-      return;
-    }
+    if (!flag) return;
     const timer = setTimeout(() => setDelayed(true), delayMs);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      setDelayed(false);
+    };
   }, [flag, delayMs]);
 
   return flag && delayed;

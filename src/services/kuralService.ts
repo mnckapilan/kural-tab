@@ -6,7 +6,7 @@ import {
   type MetadataSection,
   type KuralMetadataResult,
   FILE_PATHS,
-} from "../types/models";
+} from "@/types/models";
 
 /**
  * Custom error for Kural data operations

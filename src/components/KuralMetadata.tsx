@@ -1,14 +1,13 @@
-import React from "react";
-import type { KuralMetadataResult } from "../types/models";
+import type { KuralMetadataResult } from "@/types/models";
 
 interface KuralMetadataProps {
   metadata: KuralMetadataResult | null;
 }
 
 const METADATA_CLASS =
-  "mb-[15px] min-h-5 text-left text-base text-muted-foreground max-[600px]:mb-2.5 max-[600px]:text-xs";
+  "mb-2.5 min-h-5 text-left text-xs text-muted-foreground sm:mb-4 sm:text-base";
 
-const KuralMetadata: React.FC<KuralMetadataProps> = ({ metadata }) => {
+function KuralMetadata({ metadata }: KuralMetadataProps) {
   if (!metadata) {
     return (
       <div className={METADATA_CLASS} data-testid="kural-metadata">
@@ -23,17 +22,17 @@ const KuralMetadata: React.FC<KuralMetadataProps> = ({ metadata }) => {
         href={`https://thirukkural.gokulnath.com/#/thirukkuralchapters/${metadata.chapter.number}/thirukkurals`}
         target="_blank"
         rel="noopener noreferrer"
-        className="group relative block pl-[15px] text-muted-foreground no-underline transition-colors duration-300 before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-border before:transition-colors before:duration-300 visited:text-muted-foreground hover:text-quote hover:before:bg-quote active:text-quote"
+        className="group relative block pl-4 text-muted-foreground no-underline transition-colors duration-300 before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-border before:transition-colors before:duration-300 visited:text-muted-foreground hover:text-quote hover:before:bg-quote active:text-quote"
       >
-        <div className="mb-[5px]">
+        <div className="mb-1.5">
           {metadata.section.tamil} – {metadata.section.name}
         </div>
-        <div className="relative pl-2.5 before:absolute before:top-1/2 before:-left-[15px] before:h-px before:w-4 before:bg-border before:transition-colors before:duration-300 group-hover:before:bg-quote">
+        <div className="relative pl-2.5 before:absolute before:top-1/2 before:-left-4 before:h-px before:w-4 before:bg-border before:transition-colors before:duration-300 group-hover:before:bg-quote">
           {metadata.chapter.tamil} – {metadata.chapter.name}
         </div>
       </a>
     </div>
   );
-};
+}
 
 export default KuralMetadata;

@@ -1,19 +1,14 @@
-import React, { useMemo, useState } from "react";
-import { useKural } from "../context/KuralContext";
-import KuralText from "./KuralText";
-import KuralMetadata from "./KuralMetadata";
-import KuralExplanation from "./KuralExplanation";
-import KuralMeaning from "./KuralMeaning";
-import KuralSkeleton from "./KuralSkeleton";
-import { useKuralLayout } from "../hooks/useKuralLayout";
+import { useState } from "react";
+import { useKural } from "@/context/KuralContext";
+import KuralText from "@/components/KuralText";
+import KuralMetadata from "@/components/KuralMetadata";
+import KuralExplanation from "@/components/KuralExplanation";
+import KuralMeaning from "@/components/KuralMeaning";
+import KuralSkeleton from "@/components/KuralSkeleton";
+import FavouritesPopover from "@/components/FavouritesPopover";
 import { Star } from "lucide-react";
 import { AnimatePresence, m } from "motion/react";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { QUOTE_CONTAINER } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 import {
@@ -25,32 +20,19 @@ import {
 } from "@/lib/motion";
 import { useDelayedFlag } from "@/hooks/useDelayedFlag";
 
-const KuralDisplay: React.FC = () => {
+function KuralDisplay() {
   const {
     kural,
     metadata,
-    kuralData,
-    favouriteKurals,
     isFavourite,
     toggleFavourite,
-    selectKuralByNumber,
     isLoading,
     error,
     refreshKural,
   } = useKural();
-  const { textWidth, handleLayoutChange } = useKuralLayout();
-  const [showFavourites, setShowFavourites] = useState(false);
   // Bumped on each star click so the "pop" plays only on user toggles, not on navigation.
   const [starToggles, setStarToggles] = useState(0);
   const showSkeleton = useDelayedFlag(isLoading, SKELETON_DELAY_MS);
-
-  const favouriteItems = useMemo(() => {
-    if (!kuralData) return [];
-    const map = new Map(kuralData.kural.map((item) => [item.Number, item]));
-    return favouriteKurals
-      .map((num) => map.get(num))
-      .filter((item): item is NonNullable<typeof item> => Boolean(item));
-  }, [kuralData, favouriteKurals]);
 
   // Fast loads render nothing (just the page background) and then fade the
   // kural in; the skeleton only appears if loading is genuinely slow.
@@ -75,24 +57,18 @@ const KuralDisplay: React.FC = () => {
     );
   }
 
-  const containerStyle =
-    textWidth > 0
-      ? ({ "--kural-text-width": `${textWidth}px` } as React.CSSProperties)
-      : undefined;
-
   const starred = isFavourite(kural.Number);
 
   return (
     <m.div
       className={QUOTE_CONTAINER}
-      style={containerStyle}
       variants={ENTRANCE_CONTAINER}
       initial="hidden"
       animate="show"
     >
       <m.div
         variants={ENTRANCE_ITEM}
-        className="mb-[15px] flex items-center gap-2.5 text-left text-[28px] text-muted-foreground max-[600px]:mb-2.5 max-[600px]:text-xs"
+        className="mb-2.5 flex items-center gap-2.5 text-left text-xs text-muted-foreground sm:mb-4 sm:text-kural-number"
         data-testid="kural-number"
       >
         <span data-testid="kural-number-value">{kural.Number}</span>
@@ -101,7 +77,6 @@ const KuralDisplay: React.FC = () => {
           variant="muted"
           size="pill"
           onClick={refreshKural}
-          aria-label="Randomize kural"
         >
           Randomise
         </Button>
@@ -137,22 +112,27 @@ const KuralDisplay: React.FC = () => {
 
       {/*
         Couplet swap: `wait` guarantees only one block (and one set of test ids)
-        exists at a time, so the new KuralText measures itself after it mounts
-        and `--kural-text-width` is only updated for the new couplet. The number
-        row above updates instantly. `initial={false}` skips the first mount,
-        which the staggered entrance already covers.
+        exists at a time. The number row above updates instantly.
+        `initial={false}` skips the first mount, which the staggered entrance
+        already covers.
+
+        `w-min` sizes this block to its min-content width. The couplet lines are
+        `whitespace-nowrap`, so that is the longer line, and the translation and
+        meaning (which can wrap) fill exactly that width. Pure CSS, so there is
+        no measurement to go stale when the font loads or the window resizes.
       */}
       <m.div variants={ENTRANCE_ITEM}>
         <AnimatePresence initial={false} mode="wait">
           <m.div
             key={kural.Number}
+            className="w-min"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0, transition: FADE_IN }}
             exit={{ opacity: 0, y: -4, transition: FADE_OUT }}
           >
             <KuralMetadata metadata={metadata} />
 
-            <KuralText kural={kural} onLayoutChanged={handleLayoutChange} />
+            <KuralText kural={kural} />
 
             <KuralExplanation explanation={kural.Translation} />
 
@@ -162,74 +142,10 @@ const KuralDisplay: React.FC = () => {
       </m.div>
 
       <m.div variants={ENTRANCE_ITEM} className="mt-5 text-left">
-        <Popover open={showFavourites} onOpenChange={setShowFavourites}>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="muted"
-              size="md"
-              disabled={favouriteItems.length === 0 && !showFavourites}
-            >
-              {showFavourites ? "Hide Favourites" : "See Favourites"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            align="start"
-            sideOffset={12}
-            className="w-[min(640px,90vw)] rounded-lg border-border p-0 shadow-none"
-          >
-            <div
-              className="flex max-h-80 [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent] flex-col gap-2 overflow-y-auto p-2.5"
-              data-testid="favourites-list"
-            >
-              {favouriteItems.length === 0 && (
-                <div className="text-sm text-muted-foreground">
-                  No favourites yet.
-                </div>
-              )}
-              {favouriteItems.map((item) => (
-                <div
-                  key={item.Number}
-                  className="flex items-stretch gap-2 rounded-md border border-border text-quote hover:border-quote hover:text-foreground"
-                  data-testid="favourites-item"
-                >
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="h-auto flex-1 justify-start gap-2.5 px-2.5 py-2 text-left font-light"
-                    onClick={() => {
-                      selectKuralByNumber(item.Number);
-                      setShowFavourites(false);
-                    }}
-                  >
-                    <span className="min-w-[26px] text-center text-xs text-muted-foreground">
-                      {item.Number}
-                    </span>
-                    <span className="flex flex-col gap-0.5">
-                      <span className="block text-sm [overflow-wrap:normal] break-keep whitespace-nowrap">
-                        {item.Line1}
-                      </span>
-                      <span className="block text-sm [overflow-wrap:normal] break-keep whitespace-nowrap">
-                        {item.Line2}
-                      </span>
-                    </span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="h-auto px-2.5 py-2 text-xs font-light text-muted-foreground hover:text-foreground"
-                    onClick={() => toggleFavourite(item.Number)}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+        <FavouritesPopover />
       </m.div>
     </m.div>
   );
-};
+}
 
 export default KuralDisplay;

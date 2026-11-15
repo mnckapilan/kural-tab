@@ -1,12 +1,15 @@
-import React, {
+import {
   createContext,
-  useState,
-  useContext,
+  use,
+  useCallback,
   useEffect,
+  useMemo,
+  useRef,
+  useState,
   type ReactNode,
 } from "react";
-import { type ThemeType, THEME } from "../types/models";
-import { readThemeHint, themeItem, writeThemeHint } from "../utils/storage";
+import { type ThemeType, THEME } from "@/types/models";
+import { readThemeHint, themeItem, writeThemeHint } from "@/utils/storage";
 
 interface ThemeContextType {
   theme: ThemeType;
@@ -19,33 +22,29 @@ interface ThemeProviderProps {
   children: ReactNode;
 }
 
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+export function ThemeProvider({ children }: ThemeProviderProps) {
   // Start from the same theme public/theme-init.js already painted, so the
   // class effect below doesn't flip it back before storage resolves.
   const [theme, setTheme] = useState<ThemeType>(
     () => readThemeHint() ?? THEME.DARK,
   );
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Theme currently applied to <html>, and whether the next application is the
+  // storage correction (which must not animate; see below).
+  const appliedTheme = useRef<ThemeType | null>(null);
+  const applyInstantly = useRef(false);
 
   useEffect(() => {
-    // Add initial no-transition class to prevent flash
-    document.body.classList.add("no-transition");
-
     const getSavedTheme = async (): Promise<void> => {
       try {
-        setTheme(await themeItem.getValue());
+        const saved = await themeItem.getValue();
+        // The localStorage hint can be missing or stale (first run, cleared
+        // site data). Correcting it must not animate the body background.
+        if (saved !== appliedTheme.current) {
+          applyInstantly.current = true;
+          setTheme(saved);
+        }
       } catch (error: unknown) {
         console.error("Error retrieving theme from storage:", error);
-      } finally {
-        setIsLoading(false);
-
-        // Force a reflow before removing the no-transition class
-        void document.body.offsetWidth;
-
-        // Remove the no-transition class after a brief delay
-        setTimeout(() => {
-          document.body.classList.remove("no-transition");
-        }, 50);
       }
     };
 
@@ -58,38 +57,42 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    document.documentElement.dataset.theme =
-      theme === THEME.LIGHT ? "light" : "dark";
-    document.documentElement.classList.toggle("dark", theme === THEME.DARK);
+    const { body, documentElement } = document;
+    const instant = applyInstantly.current;
+    applyInstantly.current = false;
+
+    if (instant) body.classList.add("no-transition");
+    documentElement.dataset.theme = theme === THEME.LIGHT ? "light" : "dark";
+    documentElement.classList.toggle("dark", theme === THEME.DARK);
+    if (instant) {
+      // Flush styles while transitions are off, so removing the class below
+      // doesn't start one.
+      void body.offsetWidth;
+      body.classList.remove("no-transition");
+    }
+
+    appliedTheme.current = theme;
     writeThemeHint(theme);
   }, [theme]);
 
-  const toggleTheme = (): void => {
+  const toggleTheme = useCallback((): void => {
     const newTheme = theme === THEME.DARK ? THEME.LIGHT : THEME.DARK;
     setTheme(newTheme);
 
     themeItem.setValue(newTheme).catch((error: unknown) => {
       console.error("Error saving theme:", error);
     });
-  };
+  }, [theme]);
 
-  // Storage resolves in a few ms; render nothing (the inline critical CSS
-  // already paints the background) rather than flashing a loading message.
-  if (isLoading) {
-    return null;
-  }
+  const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
+  return <ThemeContext value={value}>{children}</ThemeContext>;
+}
 
-export const useTheme = (): ThemeContextType => {
-  const context = useContext(ThemeContext);
+export function useTheme(): ThemeContextType {
+  const context = use(ThemeContext);
   if (context === undefined) {
     throw new Error("useTheme must be used within a ThemeProvider");
   }
   return context;
-};
+}

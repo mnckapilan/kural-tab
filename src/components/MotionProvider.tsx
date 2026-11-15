@@ -1,4 +1,4 @@
-import React from "react";
+import type { ReactNode } from "react";
 import { LazyMotion, MotionConfig, domAnimation } from "motion/react";
 
 /**
@@ -11,12 +11,12 @@ import { LazyMotion, MotionConfig, domAnimation } from "motion/react";
  *
  * Shared timings live in `@/lib/motion`.
  */
-const MotionProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => (
-  <LazyMotion features={domAnimation} strict>
-    <MotionConfig reducedMotion="user">{children}</MotionConfig>
-  </LazyMotion>
-);
+function MotionProvider({ children }: { children: ReactNode }) {
+  return (
+    <LazyMotion features={domAnimation} strict>
+      <MotionConfig reducedMotion="user">{children}</MotionConfig>
+    </LazyMotion>
+  );
+}
 
 export default MotionProvider;

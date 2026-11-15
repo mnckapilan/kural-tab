@@ -21,7 +21,8 @@ npm run typecheck  # tsc --noEmit (WXT/Vite strip types and never type check)
 Node version is set to 24 (latest 24.x) via `.nvmrc`; use `nvm use` before running commands.
 
 `eslint.config.mjs` is a flat config using `@eslint/js` recommended, `typescript-eslint`
-`recommendedTypeChecked`, and `eslint-plugin-react`. Formatting is Prettier (`.prettierrc.json`, default
+`recommendedTypeChecked`, `eslint-plugin-react`, and `eslint-plugin-react-hooks` (flat `recommended`,
+including the React Compiler-era rules such as `set-state-in-effect`; fix violations rather than disabling them). Formatting is Prettier (`.prettierrc.json`, default
 style) with `prettier-plugin-tailwindcss`, which sorts Tailwind classes (including inside `cn()`/`cva()`).
 CI fails on unformatted files, so run `npm run format` before committing.
 
@@ -67,8 +68,7 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
   other open new-tab pages stay in sync.
 - `src/context/ThemeContext.tsx` — Owns light/dark theme (defaults to dark). Persists via `themeItem` (also `.watch()`ed
   across open tabs). Toggles the `dark` class on `<html>` (shadcn convention; light = no class) plus a
-  `data-theme="dark|light"` attribute the tests assert on, mirrors the theme into a `localStorage` copy for `public/theme-init.js` (see Styling), and puts a temporary `no-transition` class on
-  `body` to prevent a flash on load. Renders nothing until storage resolves (a few ms; the inline critical CSS already paints the background).
+  `data-theme="dark|light"` attribute the tests assert on, mirrors the theme into a `localStorage` copy for `public/theme-init.js` (see Styling), and never blocks rendering: it initialises from the synchronous `localStorage` hint, then lets `themeItem.getValue()` correct it when storage resolves. If that correction changes the theme (hint missing/stale), the class/attribute update runs with a temporary `no-transition` class on `body` (add, flush with a forced reflow, remove, all synchronously in the effect) so the body background doesn't animate; normal user toggles still animate.
 
 Storage items live in `src/utils/storage.ts`, defined with `@wxt-dev/storage` (`storage` from `#imports`):
 `themeItem` (`sync:theme`, fallback `THEME.DARK`) and `favouriteKuralsItem` (`sync:favouriteKurals`, fallback
@@ -107,20 +107,25 @@ App
                 │   ├── KuralText          (2-line Tamil couplet)
                 │   ├── KuralExplanation   (English translation)
                 │   ├── KuralMeaning       (Tamil meaning, mv field)
-                │   └── favourites         (shadcn Popover: toggle + list, owned by KuralDisplay)
+                │   └── FavouritesPopover  (shadcn Popover: toggle + list; owns its open state)
                 └── dev indicator          (only when import.meta.env.DEV)
 ```
 
-`KuralDisplay` is the only stateful component — it owns the favourites panel open/closed state and
-renders its own error state (separate from `ErrorBoundary`, which only catches thrown render errors).
+`KuralDisplay` renders its own error state (separate from `ErrorBoundary`, which only catches thrown
+render errors); `FavouritesPopover` owns the favourites panel open/closed state and reads favourites from
+`useKural()`.
 
-**Layout coupling:** `KuralText` measures its two rendered lines in a `requestAnimationFrame` after each
-kural change and reports the max width up through `useKuralLayout` (`src/hooks/useKuralLayout.ts`).
-`KuralDisplay` writes that width to the `--kural-text-width` CSS custom property on the card container,
-which the translation/meaning blocks use (`w-[var(--kural-text-width,auto)]`) to align to the couplet.
-Changing the `data-testid="kural-text"` container's two-child-`div` structure will break this measurement.
-The app wrapper in `App.tsx` centres a shrink-wrapped inner `div`; that is what the width is measured
-against, so don't make it full-width.
+**Component style:** plain `function` components with typed props (no `React.FC`, no default `import React`),
+`@/` alias imports only in `src/` (no relative paths), React 19 `<SomeContext value={…}>` and `use(Context)`.
+Context values and their callbacks are memoised (`useMemo`/`useCallback`) so consumers don't re-render on
+every provider render. `ErrorBoundary` stays a class (required).
+
+**Layout coupling (pure CSS):** the swapped block in `KuralDisplay` (metadata + couplet + translation + meaning)
+has `w-min` (`width: min-content`). The couplet lines in `KuralText` are `whitespace-nowrap`, so the block's
+min-content width is the longer line, and the translation/meaning wrap to exactly that width. No JS
+measurement. Don't remove `whitespace-nowrap` from the couplet lines (the block would collapse to the longest
+word), and keep the number row and favourites button outside the `w-min` block. The couplet itself never
+wraps, so on viewports narrower than the longest couplet line the page scrolls horizontally.
 
 **Styling — Tailwind CSS v4 + shadcn/ui.** Don't write hand-rolled CSS classes; use Tailwind utilities in
 components and the design tokens.
@@ -140,6 +145,12 @@ components and the design tokens.
   (the CLI has previously written to `../src` and imported `cn` from a bogus package). `Button` has a
   project-specific `muted` variant plus `md`/`pill`/`icon-round` sizes for the app's outlined pill buttons.
   Use `cn()` from `src/lib/utils.ts` for conditional classes. Icons come from `lucide-react`.
+- **Sizing and breakpoints:** use Tailwind's scale (`mb-4`, `rounded-xl`, `max-w-200`, `text-xl`), not
+  pixel-arbitrary values. App-specific type sizes are named tokens in `@theme` (`text-kural` 32px/1.4 for the
+  couplet, `text-kural-number` 28px for the number); everything else uses the built-in `text-xs/base/xl`.
+  Responsive styles are mobile-first: the base classes are the small-screen styles and `sm:` (640px) is the
+  desktop layout (no `max-[600px]:`). Arbitrary values are kept only where nothing on the scale fits
+  (`w-[min(640px,90vw)]` popover, `w-[95%]`/`w-[90%]` card, `[scrollbar-*]`, `leading-[normal]`).
 - The `@/` alias (→ `src/`) is provided by WXT's generated tsconfig and Vite config.
 - Chrome's built-in extension-page stylesheet sets `body { font-family: system-ui }`, which beats anything
   inside `@layer`; that's why `globals.css` has an unlayered `body { @apply font-sans; }`.
@@ -190,7 +201,7 @@ make it relative to the CSS file.
   non-headless (set in `playwright.config.ts`); extensions don't load headless.
 - `newtab.spec.ts` — Navigates to `chrome-extension://<id>/newtab.html` and covers rendering, kural number
   range, randomise, star toggle, favourites panel, theme toggle, and metadata links. Tests locate elements
-  by role/accessible name (`getByRole("button", { name: "Randomize kural" })`) or `data-testid`
+  by role/accessible name (`getByRole("button", { name: "Randomise" })`) or `data-testid`
   (`kural-text`, `kural-number-value`, `favourites-item`, …) — never by CSS class, since Tailwind classes
   are presentational. Changing an `aria-label` or removing a `data-testid` breaks tests.
 - Favourites persist in extension `sync` storage within a run, so tests clean up after themselves by

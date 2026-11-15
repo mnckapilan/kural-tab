@@ -37,6 +37,14 @@
  *   muted-foreground  metadata, secondary text, idle buttons
  *   border            hairlines, outlines, the metadata "tree"
  *
+ * Typography tokens (--text-*): only the app-specific sizes are named; the rest
+ * use Tailwind's scale (text-xs/base/xl). Each is a size, its line-height is set
+ * alongside via --text-*--line-height.
+ *   text-kural         couplet at desktop size, 32px / 1.4 (mobile uses text-xl)
+ *   text-kural-number  kural number in the header row, 28px (mobile uses text-xs)
+ * Breakpoint: everything is mobile-first, with `sm:` (640px) as the desktop
+ * layout.
+ *
  * If you change background/foreground, also update the inline critical CSS in
  * src/entrypoints/newtab/index.html.
  */
@@ -103,6 +111,10 @@
 
   --font-sans: "Helvetica Neue", Arial, sans-serif;
   --font-tamil: "Noto Sans Tamil", Arial, sans-serif;
+
+  --text-kural: 2rem;
+  --text-kural--line-height: 1.4;
+  --text-kural-number: 1.75rem;
 }
 
 @layer base {
@@ -135,7 +147,7 @@
     cursor: pointer;
   }
 
-  /* Applied by ThemeContext on first paint so the stored theme doesn't animate in. */
+  /* Applied briefly by ThemeContext when storage corrects the first-paint theme, so that change doesn't animate. */
   .no-transition,
   .no-transition *,
   .no-transition *::before,
