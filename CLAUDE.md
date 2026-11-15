@@ -11,6 +11,7 @@ npm test           # Build (via pretest) + run Playwright e2e tests (real Chrome
 npm run zip        # `wxt zip`: production build + .output/kural-tab-<version>-chrome.zip
 npm run submit     # `wxt submit`: upload a zip to the Chrome Web Store (CI does this on tags)
 npm run lint       # eslint src
+npm run format     # prettier --write . (CI runs format:check)
 npm run typecheck  # tsc --noEmit (WXT/Vite strip types and never type check)
 ```
 
@@ -20,8 +21,9 @@ npm run typecheck  # tsc --noEmit (WXT/Vite strip types and never type check)
 Node version is set to 24 (latest 24.x) via `.nvmrc`; use `nvm use` before running commands.
 
 `eslint.config.mjs` is a flat config using `@eslint/js` recommended, `typescript-eslint`
-`recommendedTypeChecked`, and `eslint-plugin-react`. There is **no formatter** — Prettier was removed
-because it was never wired up (no script, no config file, no ESLint integration).
+`recommendedTypeChecked`, and `eslint-plugin-react`. Formatting is Prettier (`.prettierrc.json`, default
+style) with `prettier-plugin-tailwindcss`, which sorts Tailwind classes (including inside `cn()`/`cva()`).
+CI fails on unformatted files, so run `npm run format` before committing.
 
 Because the build only strips types, **`npm run build` succeeds on code with type errors**. Run
 `npm run typecheck` explicitly after changing types.
@@ -64,8 +66,9 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
   Persists favourites (sorted number array) via `favouriteKuralsItem`, and `.watch()`es it so
   other open new-tab pages stay in sync.
 - `src/context/ThemeContext.tsx` — Owns light/dark theme (defaults to dark). Persists via `themeItem` (also `.watch()`ed
-  across open tabs). Applies `light-mode`/`dark-mode` classes to `document.body`, and uses a temporary
-  `no-transition` class to prevent a flash on load. Renders a `Loading...` div until storage resolves.
+  across open tabs). Toggles the `dark` class on `<html>` (shadcn convention; light = no class) plus a
+  `data-theme="dark|light"` attribute the tests assert on, and puts a temporary `no-transition` class on
+  `body` to prevent a flash on load. Renders a `Loading...` div until storage resolves.
 
 Storage items live in `src/utils/storage.ts`, defined with `@wxt-dev/storage` (`storage` from `#imports`):
 `themeItem` (`sync:theme`, fallback `THEME.DARK`) and `favouriteKuralsItem` (`sync:favouriteKurals`, fallback
@@ -99,13 +102,13 @@ App
                 ├── ThemeToggle
                 ├── KuralDisplay
                 │   ├── KuralSkeleton      (loading state)
-                │   ├── quote-number       (number + Randomise + star buttons)
+                │   ├── number row         (number + Randomise + star buttons)
                 │   ├── KuralMetadata      (section + chapter; links to thirukkural.gokulnath.com)
                 │   ├── KuralText          (2-line Tamil couplet)
                 │   ├── KuralExplanation   (English translation)
                 │   ├── KuralMeaning       (Tamil meaning, mv field)
-                │   └── favourites-section (toggle + list, owned by KuralDisplay)
-                └── dev-indicator          (only when __DEV__)
+                │   └── favourites         (shadcn Popover: toggle + list, owned by KuralDisplay)
+                └── dev indicator          (only when import.meta.env.DEV)
 ```
 
 `KuralDisplay` is the only stateful component — it owns the favourites panel open/closed state and
@@ -113,33 +116,57 @@ renders its own error state (separate from `ErrorBoundary`, which only catches t
 
 **Layout coupling:** `KuralText` measures its two rendered lines in a `requestAnimationFrame` after each
 kural change and reports the max width up through `useKuralLayout` (`src/hooks/useKuralLayout.ts`).
-`KuralDisplay` writes that width to the `--kural-text-width` CSS custom property on `.quote-container`,
-which the stylesheet uses to align the surrounding blocks to the couplet. Changing the `.quote-text`
-markup or its `div > div` structure will break this measurement.
+`KuralDisplay` writes that width to the `--kural-text-width` CSS custom property on the card container,
+which the translation/meaning blocks use (`w-[var(--kural-text-width,auto)]`) to align to the couplet.
+Changing the `data-testid="kural-text"` container's two-child-`div` structure will break this measurement.
+The app wrapper in `App.tsx` centres a shrink-wrapped inner `div`; that is what the width is measured
+against, so don't make it full-width.
 
-**Styling — single source of truth, plus a small inlined critical-CSS block:**
-`src/styles/style.css` is the ONLY stylesheet — imported by `src/entrypoints/newtab/main.tsx` and bundled by
-Vite into a hashed `assets/newtab-*.css` linked from `newtab.html`. **Edit `src/styles/style.css`.** There
-used to be a second, hand-maintained `static/style.css` that silently drifted out of sync (see #19); it has
-been deleted.
+**Styling — Tailwind CSS v4 + shadcn/ui.** Don't write hand-rolled CSS classes; use Tailwind utilities in
+components and the design tokens.
+
+- `src/styles/globals.css` is the only stylesheet (imported by `newtab/main.tsx`, bundled by Vite into a
+  hashed `assets/newtab-*.css`). Tailwind is wired in via `@tailwindcss/vite` in `wxt.config.ts` (no
+  `tailwind.config.js`; v4 is configured in CSS). The file holds the `@font-face`, the design tokens, and a
+  small `@layer base`.
+- **Tokens:** raw colours are CSS variables on `:root` (light) and `.dark`, exposed to Tailwind through
+  `@theme inline`. Use the semantic utilities, not hex values: `bg-background`, `text-foreground`,
+  `text-quote` (couplet/translation text), `text-muted-foreground` (metadata, idle buttons),
+  `border-border`, plus the standard shadcn set (`popover`, `accent`, `ring`, …) and `font-tamil`/`font-sans`.
+  Dark variants use `dark:` (`@custom-variant dark` matches `.dark` on `<html>`).
+- **Components:** shadcn/ui (new-york style, `components.json`) lives in `src/components/ui/` and is
+  copied-in source we own, built on the unified `radix-ui` package. Add more with
+  `npx shadcn@latest add <name>` — check where it writes files and that imports use `@/lib/utils`
+  (the CLI has previously written to `../src` and imported `cn` from a bogus package). `Button` has a
+  project-specific `muted` variant plus `md`/`pill`/`icon-round` sizes for the app's outlined pill buttons.
+  Use `cn()` from `src/lib/utils.ts` for conditional classes. Icons come from `lucide-react`.
+- The `@/` alias (→ `src/`) is provided by WXT's generated tsconfig and Vite config.
+- Chrome's built-in extension-page stylesheet sets `body { font-family: system-ui }`, which beats anything
+  inside `@layer`; that's why `globals.css` has an unlayered `body { @apply font-sans; }`.
 
 To avoid a flash of unstyled content before the bundled CSS/JS loads, `src/entrypoints/newtab/index.html`
-has a small inline `<style>` block in its `<head>` with just the body background/text colour (light/dark
-CSS vars) and basic centering layout — deliberately minimal, not a duplicate stylesheet. If you change
-`body`, `:root`, `.light-mode` colour vars, or `.no-transition` in `src/styles/style.css`, check whether
-the inline block needs the same update.
+has `class="dark"` on `<html>` (the default theme) and a small inline `<style>` with just the
+`--background`/`--foreground` values and body colours — deliberately minimal, not a duplicate stylesheet.
+If you change those tokens in `globals.css`, update the inline block too.
+
+**Animation — Motion** (`motion`, import from `motion/react`). `src/components/MotionProvider.tsx` wraps the
+app in `LazyMotion` (`domAnimation`, `strict`) and `MotionConfig reducedMotion="user"`, so components must
+use `m.div` etc., not `motion.div` (strict mode throws). Reuse the shared timings in `src/lib/motion.ts` (`FADE_IN`, `FADE_OUT`, `EASE_OUT`). Use `AnimatePresence` for enter/exit. Radix/shadcn
+primitives (Popover, …) keep their `tw-animate-css` `data-[state=open]:animate-in` classes; don't also wrap
+them in Motion.
 
 Noto Sans Tamil is self-hosted, not loaded from Google Fonts: `public/fonts/NotoSansTamil-Light.woff2`
-(weight 300 — the only weight used anywhere in the app; `body` sets `font-weight: 300` and nothing
-overrides it) is subsetted to the Tamil unicode range and declared via `@font-face` at the top of
-`src/styles/style.css`. `public/fonts/LICENSE.txt` carries the required SIL OFL 1.1 text. The
-`@font-face` `src: url(...)` is an absolute public path (`/fonts/...`): Vite leaves such URLs untouched
-and `public/` is copied to the output root, so it resolves against the extension origin. Don't make it
-relative to the CSS file.
+(weight 300 — the only weight used anywhere in the app; `body` is `font-light`, and buttons set
+`font-light` explicitly) is subsetted to the Tamil unicode range and declared via `@font-face` at the top of
+`src/styles/globals.css` (`font-tamil` utility). `public/fonts/LICENSE.txt` carries the required SIL OFL 1.1
+text. The `@font-face` `src: url(...)` is an absolute public path (`/fonts/...`): Vite leaves such URLs
+untouched and `public/` is copied to the output root, so it resolves against the extension origin. Don't
+make it relative to the CSS file.
 
 **Build config:**
 
-- `wxt.config.ts` — `srcDir: "src"`, `publicDir: "public"`, the `@wxt-dev/module-react` module, and the
+- `wxt.config.ts` — `srcDir: "src"`, `publicDir: "public"`, the `@wxt-dev/module-react` module, the
+  `@tailwindcss/vite` plugin (via the `vite` option), and the
   `manifest` block (see above). `output` goes to `.output/chrome-mv3/` (`.output/chrome-mv3-dev/` in dev).
   `import.meta.env.DEV` replaces the old `__DEV__` define (true under `npm start`, false in builds).
 - `tsconfig.json` — extends `.wxt/tsconfig.json` (generated by `wxt prepare`). WXT's strict base is used as-is, including
@@ -152,8 +179,10 @@ relative to the CSS file.
   `--load-extension=.output/chrome-mv3`, and derives `extensionId` from the service worker URL. Tests must run
   non-headless (set in `playwright.config.ts`); extensions don't load headless.
 - `newtab.spec.ts` — Navigates to `chrome-extension://<id>/newtab.html` and covers rendering, kural number
-  range, randomise, star toggle, favourites panel, theme toggle, and metadata links. Tests assert on CSS
-  class names (`.quote-text`, `.star-button`, `.favourites-item`, …) — renaming a class breaks tests.
+  range, randomise, star toggle, favourites panel, theme toggle, and metadata links. Tests locate elements
+  by role/accessible name (`getByRole("button", { name: "Randomize kural" })`) or `data-testid`
+  (`kural-text`, `kural-number-value`, `favourites-item`, …) — never by CSS class, since Tailwind classes
+  are presentational. Changing an `aria-label` or removing a `data-testid` breaks tests.
 - Favourites persist in extension `sync` storage within a run, so tests clean up after themselves by
   unstarring. `retries: 1` is set in the config.
 
@@ -163,8 +192,8 @@ relative to the CSS file.
   checkout → Node from `.nvmrc` → `npm ci` → `npm run zip` (`wxt zip`: production build + zip) → upload
   two artifacts from that one build: `<artifact_name>` (unzipped `.output/chrome-mv3/`, used by e2e) and
   `<artifact_name>-zip` (`.output/kural-tab-<version>-chrome.zip`, used for the Web Store upload).
-- `checks.yml` — Reusable workflow (`workflow_call`, takes `artifact_name`): a `static` job runs `lint`
-  and `typecheck` in a matrix (`npm ci` runs `postinstall` → `wxt prepare`, which generates the `.wxt/` that `tsconfig.json` extends), and an `e2e` job downloads the already-built `.output/chrome-mv3/` artifact (rather than
+- `checks.yml` — Reusable workflow (`workflow_call`, takes `artifact_name`): a `static` job runs `lint`,
+  `typecheck`, and `format:check` in a matrix (`npm ci` runs `postinstall` → `wxt prepare`, which generates the `.wxt/` that `tsconfig.json` extends), and an `e2e` job downloads the already-built `.output/chrome-mv3/` artifact (rather than
   rebuilding) and runs Playwright against it via `xvfb-run -a npx playwright test`, so CI tests the exact
   bytes that get shipped. `xvfb-run` provides a virtual display, since extensions require headed Chrome
   and GitHub's Linux runners have no display server. On failure it uploads `playwright-report/` as an
