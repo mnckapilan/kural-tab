@@ -50,8 +50,10 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
 - There is no `manifest.json` file: the manifest is generated from `wxt.config.ts` (name, description,
   `permissions: ["storage"]`, `action.default_title`). `version` comes from `package.json`.
 - Icons: `public/icon/{16,32,48,128}.png`, auto-discovered by WXT into the manifest's `icons` (Chrome
-  also uses them for the toolbar button). They are rendered from the master `assets/icon.svg` (grey
-  rounded square, white "K" as a path) with `rsvg-convert -w N -h N assets/icon.svg -o public/icon/N.png`.
+  also uses them for the toolbar button). `newtab.html` links `/icon/32.png` as its favicon. They are
+  rendered from the master `assets/icon.svg` (slate `#4f5f73` circle, white Tamil "அ" outlined as a path
+  from Noto Sans Tamil Regular, matching the Web Store listing icon) with
+  `rsvg-convert -w N -h N assets/icon.svg -o public/icon/N.png`.
 
 **State management via React Context:**
 - `src/context/KuralContext.tsx` — Owns kural data, random selection, and favourites. Fetches once and
