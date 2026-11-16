@@ -9,6 +9,7 @@
     "postinstall": "wxt prepare",
     "start": "wxt",
     "build": "wxt build",
+    "local": "KURAL_LOCAL=1 wxt build && mkdir -p ~/.kural-tab/local && rsync -a --delete .output/chrome-mv3/ ~/.kural-tab/local/",
     "zip": "wxt zip",
     "submit": "wxt submit",
     "pretest": "npm run build",

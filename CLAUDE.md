@@ -29,8 +29,13 @@ CI fails on unformatted files, so run `npm run format` before committing.
 Because the build only strips types, **`npm run build` succeeds on code with type errors**. Run
 `npm run typecheck` explicitly after changing types.
 
-To load the extension locally: go to `chrome://extensions/`, enable Developer Mode, click "Load unpacked",
-select the `.output/chrome-mv3/` directory (after `npm run build`).
+To try a build in your everyday Chrome, run `npm run local` from any worktree: it builds with the manifest name
+"Kural Tab (local)" and rsyncs `.output/chrome-mv3/` into the fixed folder `~/.kural-tab/local/`. Load that folder once
+(`chrome://extensions/` → Developer Mode → "Load unpacked"); because the path never changes, the extension ID and its
+storage survive rebuilds. Whichever worktree ran `npm run local` last is what's loaded. Chrome doesn't watch unpacked
+extensions, so click ⟳ on the card (or "Update" in the toolbar) after each build. Only one extension can override the
+new tab, so disable the Web Store install in that profile. The local copy has a different ID, so its favourites/settings
+are separate from the store version's.
 
 To run a single Playwright test file:
 

@@ -11,7 +11,9 @@ export default defineConfig({
     plugins: [tailwindcss()],
   }),
   manifest: {
-    name: "Kural Tab",
+    // `npm run local` sets KURAL_LOCAL so the copy loaded from ~/.kural-tab/local
+    // is distinguishable from the Web Store install in chrome://extensions.
+    name: process.env.KURAL_LOCAL ? "Kural Tab (local)" : "Kural Tab",
     description:
       "Replace your new tab with daily Thirukkural couplets, offering timeless wisdom and reflection.",
     permissions: ["storage"],
