@@ -147,7 +147,7 @@
  * needs no block. Each preset overrides the five text/background tokens for
  * light and dark; the `.dark[...]` selectors are more specific than `.dark`,
  * so they win regardless of order. Keep the values in sync with PALETTES in
- * src/lib/appearanceOptions.ts (swatches).
+ * src/lib/appearanceOptions.ts (theme cards).
  */
 [data-palette="paper"] {
   --background: #f3ecdc;

@@ -101,7 +101,7 @@ export function paletteColours(
   return preset ? preset[theme] : null;
 }
 
-/** Backgrounds a palette uses in each mode (for swatches and seeding Custom). */
+/** Backgrounds a palette uses in each mode (for theme cards and seeding Custom). */
 export function paletteBackgrounds(appearance: Appearance): CustomBackground {
   const light = paletteColours(appearance, THEME.LIGHT);
   const dark = paletteColours(appearance, THEME.DARK);

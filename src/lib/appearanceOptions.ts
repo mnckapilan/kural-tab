@@ -1,5 +1,5 @@
 // Display lists for the Appearance settings: labels, descriptions, font
-// families and swatch colours. The ids live in models.ts. The CSS that actually
+// families and theme card colours. The ids live in models.ts. The CSS that actually
 // applies each option is in globals.css ([data-size], [data-font],
 // [data-palette]); keep the palette colours below in sync with it.
 

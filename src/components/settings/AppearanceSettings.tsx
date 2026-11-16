@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Monitor, Moon, Pipette, Sun } from "lucide-react";
+import { Check, Monitor, Moon, Plus, Sun } from "lucide-react";
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
 import { useAppearance } from "@/context/AppearanceContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -30,9 +30,6 @@ const SAMPLE = {
     "'A' leads letters; the Ancient Lord Leads and lords the entire world",
 };
 
-const SWATCH_CLASS =
-  "group relative flex size-8 items-center justify-center rounded-full border border-border/60 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 data-[state=checked]:ring-2 data-[state=checked]:ring-foreground data-[state=checked]:ring-offset-2 data-[state=checked]:ring-offset-background";
-
 // The preview is plain app markup (font-tamil, text-quote, the scaled text
 // sizes): the settings are applied to <html>, so it reflects them live.
 function AppearanceSettings() {
@@ -47,10 +44,6 @@ function AppearanceSettings() {
   } = useAppearance();
 
   const customBackground = appearance.customBackground[theme];
-  const paletteName =
-    appearance.palette === PALETTE.CUSTOM
-      ? "Custom"
-      : PALETTES.find((p) => p.id === appearance.palette)?.name;
 
   const reset = () => {
     resetAppearance();
@@ -98,44 +91,36 @@ function AppearanceSettings() {
             </ToggleGroupItem>
           </ToggleGroup>
         </SettingsRow>
-        <SettingsRow label="Background" description={paletteName}>
+        <div className="px-5 py-4">
+          <div className="mb-3 text-sm text-foreground">Background</div>
           <RadioGroupPrimitive.Root
             value={appearance.palette}
             onValueChange={(value) => setPalette(value as PaletteId)}
             aria-label="Background palette"
-            className="flex flex-wrap gap-2.5"
+            className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3"
           >
-            {PALETTES.map((p) => {
-              const c = p[theme];
-              return (
-                <RadioGroupPrimitive.Item
-                  key={p.id}
-                  value={p.id}
-                  aria-label={p.name}
-                  title={p.name}
-                  className={SWATCH_CLASS}
-                  style={{
-                    background: `linear-gradient(135deg, ${c.background} 50%, ${c.foreground} 50%)`,
-                  }}
-                />
-              );
-            })}
-            <RadioGroupPrimitive.Item
-              value={PALETTE.CUSTOM}
-              aria-label="Custom"
-              title="Custom"
-              className={SWATCH_CLASS}
-              style={{
-                background: `linear-gradient(135deg, ${customBackground} 50%, ${pickForeground(customBackground)} 50%)`,
-              }}
-            >
-              <Pipette
-                aria-hidden="true"
-                className="size-3.5 text-foreground mix-blend-difference"
+            {PALETTES.map((p) => (
+              <ThemeCard
+                key={p.id}
+                value={p.id}
+                name={p.name}
+                colours={p[theme]}
               />
-            </RadioGroupPrimitive.Item>
+            ))}
+            <ThemeCard
+              value={PALETTE.CUSTOM}
+              name="Custom"
+              colours={
+                appearance.palette === PALETTE.CUSTOM
+                  ? {
+                      background: customBackground,
+                      foreground: pickForeground(customBackground),
+                    }
+                  : null
+              }
+            />
           </RadioGroupPrimitive.Root>
-        </SettingsRow>
+        </div>
         {appearance.palette === PALETTE.CUSTOM && (
           <>
             <BackgroundField
@@ -223,6 +208,69 @@ function AppearanceSettings() {
   );
 }
 
+interface ThemeCardProps {
+  value: PaletteId;
+  name: string;
+  /** Colours to draw the card in; null draws the empty "+ Custom" card. */
+  colours: { background: string; foreground: string } | null;
+}
+
+// A miniature of the new tab drawn in the theme's own colours (for the
+// current light/dark mode), in the user's Tamil font, so you see how text
+// reads on it rather than two abstract colours.
+function ThemeCard({ value, name, colours }: ThemeCardProps) {
+  return (
+    <RadioGroupPrimitive.Item
+      value={value}
+      aria-label={name}
+      className="group flex flex-col gap-2 text-left outline-none"
+    >
+      <span
+        className={cn(
+          "relative flex h-24 w-full flex-col justify-center gap-1.5 overflow-hidden rounded-lg border px-4 transition-shadow group-focus-visible:ring-[3px] group-focus-visible:ring-ring/50 group-data-[state=checked]:ring-2 group-data-[state=checked]:ring-foreground group-data-[state=checked]:ring-offset-2 group-data-[state=checked]:ring-offset-background",
+          colours
+            ? "border-border/40"
+            : "items-center border-dashed border-muted-foreground/60 text-muted-foreground group-hover:text-foreground",
+        )}
+        style={
+          colours
+            ? { backgroundColor: colours.background, color: colours.foreground }
+            : undefined
+        }
+      >
+        {colours ? (
+          <>
+            <span className="font-tamil text-lg leading-tight whitespace-nowrap">
+              அகர முதல
+            </span>
+            <span
+              aria-hidden="true"
+              className="h-1 w-3/4 rounded-full bg-current opacity-35"
+            />
+            <span
+              aria-hidden="true"
+              className="h-1 w-1/2 rounded-full bg-current opacity-35"
+            />
+          </>
+        ) : (
+          <span className="flex items-center gap-1.5 text-sm">
+            <Plus className="size-4" /> Custom
+          </span>
+        )}
+        <span
+          aria-hidden="true"
+          className="absolute top-2 right-2 hidden size-5 items-center justify-center rounded-full bg-foreground text-background group-data-[state=checked]:flex"
+        >
+          <Check className="size-3" />
+        </span>
+      </span>
+      <span className="text-xs text-muted-foreground group-hover:text-foreground group-data-[state=checked]:text-foreground">
+        {name}
+      </span>
+    </RadioGroupPrimitive.Item>
+  );
+}
+
 interface BackgroundFieldProps {
   mode: ResolvedTheme;
   label: string;
@@ -243,13 +291,19 @@ function BackgroundField({
 
   return (
     <SettingsRow label={label}>
-      <div className="flex items-center gap-3">
+      {/* One control: colour swatch (native picker) inside the hex field. */}
+      <div
+        className={cn(
+          "flex h-9 w-36 items-center gap-2 rounded-md border border-border/60 pr-2 pl-1.5 focus-within:ring-[3px] focus-within:ring-ring/50",
+          invalid && "border-destructive ring-destructive/20",
+        )}
+      >
         <input
           type="color"
           value={value}
           onChange={(event) => onChange(mode, event.target.value)}
           aria-label={`${label} colour picker`}
-          className="size-8 cursor-pointer rounded-md border border-border/60 bg-transparent p-0.5"
+          className="size-6 shrink-0 cursor-pointer appearance-none rounded border-0 bg-transparent p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border [&::-webkit-color-swatch]:border-border/60 [&::-webkit-color-swatch-wrapper]:p-0"
         />
         <input
           type="text"
@@ -265,7 +319,7 @@ function BackgroundField({
           data-testid={`custom-bg-${mode}-hex`}
           spellCheck={false}
           maxLength={7}
-          className="h-8 w-24 rounded-md border border-border/60 bg-transparent px-2 font-mono text-sm text-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20"
+          className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm text-foreground uppercase outline-none"
         />
       </div>
     </SettingsRow>

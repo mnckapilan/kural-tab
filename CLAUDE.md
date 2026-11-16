@@ -117,7 +117,7 @@ There are no `window.chrome` guards or `chrome.d.ts`; the app is only meant to r
 
 - `src/types/models.ts` — Central module for all interfaces plus the `THEME`, `FONT_SIZE`, `TAMIL_FONT`, `PALETTE` and `FILE_PATHS`
   constants (and `Appearance`). Prefer these constants over string literals.
-- `src/lib/appearanceOptions.ts` — Display lists the settings UI reads (labels, descriptions, font families, size scales, preset palette colours for swatches).
+- `src/lib/appearanceOptions.ts` — Display lists the settings UI reads (labels, descriptions, font families, size scales, preset palette colours for the theme cards).
 - `src/lib/colour.ts` — Pure colour helpers (hex parse/normalise, WCAG luminance/contrast, `pickForeground`).
 - `src/services/kuralService.ts` — Static-method class. Fetches both JSON files in parallel, validates them,
   and throws `KuralDataError` on failure. `buildMetadataLookup()` flattens the section → chapterGroup →
@@ -161,8 +161,10 @@ ContentProvider > SettingsPage` (sidebar + `AppearanceSettings` / `ContentSettin
 The hierarchy comes from `KuralService.fetchSections()` (with loading and "Try Again" states). "Hide Love" is disabled once Love is
 fully hidden, "Show all" when nothing is hidden, and any change that would hide every chapter is rejected with an inline
 "At least one chapter must stay visible" message in the `role="status"` region (cleared by the next successful change). `AppearanceSettings` has a live preview (plain app
-classes, so it reflects the settings applied to `<html>`), colour mode, background swatches (+ Custom with a colour input and hex
-field per mode; invalid hex shows `aria-invalid` and isn't saved), text size, the Tamil font grid and "Reset appearance".
+classes, so it reflects the settings applied to `<html>`), colour mode, background theme cards (`ThemeCard`: a
+miniature new tab in each palette's colours for the current mode, in the user's Tamil font; radios named after the palette in the
+"Background palette" radiogroup; Custom is a dashed "+ Custom" card until selected, then shows a hex field per mode with the native
+colour picker as a swatch inside it; invalid hex shows `aria-invalid` and isn't saved), text size, the Tamil font grid and "Reset appearance".
 
 `KuralNumberJump` renders the number as a button; clicking it swaps in an input (Enter jumps, Escape or
 blur cancels, out-of-range input stays open with `aria-invalid`). `KuralDisplay` renders its own error state (separate from `ErrorBoundary`, which only catches thrown
