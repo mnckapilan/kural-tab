@@ -30,7 +30,7 @@
   },
   "homepage": "https://github.com/mnckapilan/kural-tab#readme",
   "devDependencies": {
-    "@eslint/js": "^9.26.0",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.62.0",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
