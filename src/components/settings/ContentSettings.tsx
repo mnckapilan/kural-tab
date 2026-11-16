@@ -1,9 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
-import { ChevronRight } from "lucide-react";
-import { Collapsible as CollapsiblePrimitive } from "radix-ui";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Check, ChevronRight } from "lucide-react";
+import {
+  Collapsible as CollapsiblePrimitive,
+  RadioGroup as RadioGroupPrimitive,
+} from "radix-ui";
 import { useContent } from "@/context/ContentContext";
 import { KuralService } from "@/services/kuralService";
-import type { Chapter, Section } from "@/types/models";
+import type {
+  Chapter,
+  MeaningSourceId,
+  Section,
+  TranslationSourceId,
+} from "@/types/models";
+import {
+  MEANING_SOURCES,
+  TRANSLATION_SOURCES,
+  meaningSourceOf,
+} from "@/lib/contentOptions";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -29,6 +42,8 @@ function ContentSettings() {
     setShowTranslation,
     setShowMeaning,
     setShowMetadata,
+    setTranslationSource,
+    setMeaningSource,
     setHiddenChapters,
   } = useContent();
   const [sections, setSections] = useState<ReadonlyArray<Section>>([]);
@@ -100,14 +115,23 @@ function ContentSettings() {
         title="On the new tab"
         description="Choose what appears alongside each couplet."
       >
-        <SettingsRow label="English translation">
+        <SettingsRow
+          label="English translation"
+          description={
+            TRANSLATION_SOURCES.find((t) => t.id === content.translationSource)
+              ?.name
+          }
+        >
           <Switch
             checked={content.showTranslation}
             onCheckedChange={setShowTranslation}
             aria-label="Show English translation"
           />
         </SettingsRow>
-        <SettingsRow label="Tamil meaning" description="மு. வரதராசனார் உரை">
+        <SettingsRow
+          label="Tamil meaning"
+          description={`${meaningSourceOf(content.meaningSource).tamil} உரை · ${meaningSourceOf(content.meaningSource).english}`}
+        >
           <Switch
             checked={content.showMeaning}
             onCheckedChange={setShowMeaning}
@@ -121,6 +145,73 @@ function ContentSettings() {
             aria-label="Show section and chapter"
           />
         </SettingsRow>
+      </SettingsGroup>
+
+      <SettingsGroup
+        title="Tamil meaning"
+        description={
+          content.showMeaning
+            ? "Whose உரை (commentary) to show. Each is shown with its author's name."
+            : "Turn on Tamil meaning above to choose a commentary."
+        }
+      >
+        <RadioGroupPrimitive.Root
+          value={content.meaningSource}
+          onValueChange={(value) => setMeaningSource(value as MeaningSourceId)}
+          disabled={!content.showMeaning}
+          aria-label="Tamil meaning commentary"
+          className="grid grid-cols-1 gap-px"
+        >
+          {MEANING_SOURCES.map((m) => (
+            <SourceOption
+              key={m.id}
+              value={m.id}
+              label={`${m.english} (${m.tamil})`}
+            >
+              <div className="text-sm text-foreground">
+                <span className="font-tamil">{m.tamil}</span>
+                <span className="text-muted-foreground"> · {m.english}</span>
+              </div>
+              <div className="mt-1 font-tamil text-xs text-muted-foreground">
+                {m.sample}
+              </div>
+            </SourceOption>
+          ))}
+        </RadioGroupPrimitive.Root>
+      </SettingsGroup>
+
+      <SettingsGroup
+        title="English translation"
+        description={
+          content.showTranslation
+            ? "How the couplet is put into English."
+            : "Turn on English translation above to choose a style."
+        }
+      >
+        <RadioGroupPrimitive.Root
+          value={content.translationSource}
+          onValueChange={(value) =>
+            setTranslationSource(value as TranslationSourceId)
+          }
+          disabled={!content.showTranslation}
+          aria-label="English translation style"
+          className="grid grid-cols-1 gap-px"
+        >
+          {TRANSLATION_SOURCES.map((t) => (
+            <SourceOption key={t.id} value={t.id} label={t.name}>
+              <div className="text-sm text-foreground">
+                {t.name}
+                <span className="text-muted-foreground"> · {t.credit}</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {t.description}
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground italic">
+                {t.sample}
+              </div>
+            </SourceOption>
+          ))}
+        </RadioGroupPrimitive.Root>
       </SettingsGroup>
 
       <section className="mb-10">
@@ -323,6 +414,27 @@ function TreeNode({
         {children}
       </CollapsiblePrimitive.Content>
     </CollapsiblePrimitive.Root>
+  );
+}
+
+function SourceOption({
+  value,
+  label,
+  children,
+}: {
+  value: string;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <RadioGroupPrimitive.Item
+      value={value}
+      aria-label={label}
+      className="group flex items-start justify-between gap-3 px-5 py-4 text-left outline-none hover:bg-accent/60 focus-visible:bg-accent disabled:pointer-events-none disabled:opacity-50 data-[state=checked]:bg-accent"
+    >
+      <div>{children}</div>
+      <Check className="mt-1 size-4 shrink-0 text-foreground opacity-0 group-data-[state=checked]:opacity-100" />
+    </RadioGroupPrimitive.Item>
   );
 }
 

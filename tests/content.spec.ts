@@ -68,6 +68,74 @@ test.describe("Content settings", () => {
     await expect(newTab.getByTestId("kural-translation")).toBeVisible();
   });
 
+  test("meaning commentary and English style can be picked", async ({
+    context,
+    extensionId,
+  }) => {
+    const settings = await context.newPage();
+    await goToContentSettings(settings, extensionId);
+    const newTab = await openNewTab(context, extensionId, "#1");
+
+    // Default: Mu. Varadarasanar, credited in Tamil and English
+    const author = newTab.getByTestId("kural-meaning-author");
+    await expect(author).toContainText("மு. வரதராசனார்");
+    await expect(author).toContainText("Mu. Varadarasanar");
+    await expect(newTab.getByTestId("kural-meaning")).toContainText(
+      "அகரத்தை அடிப்படையாக",
+    );
+
+    await settings.bringToFront();
+    await settings
+      .getByRole("radio", { name: "Solomon Pappaiah (சாலமன் பாப்பையா)" })
+      .click();
+    await expect(author).toContainText("சாலமன் பாப்பையா");
+    await expect(author).toContainText("Solomon Pappaiah");
+    await expect(newTab.getByTestId("kural-meaning")).toContainText(
+      "அகரத்தில் தொடங்குகின்றன",
+    );
+
+    await settings
+      .getByRole("radio", { name: "M. Karunanidhi (மு. கருணாநிதி)" })
+      .click();
+    await expect(author).toContainText("M. Karunanidhi");
+
+    const translation = newTab.getByTestId("kural-translation");
+    await expect(translation).toContainText("'A' leads letters");
+    const translator = newTab.getByTestId("kural-translation-author");
+    await expect(translator).toHaveText("— Shuddhananda Bharati");
+    await settings.getByRole("radio", { name: "Explanation" }).click();
+    await expect(translator).toHaveText("— W. H. Drew");
+    await expect(translation).toContainText(
+      "As the letter A is the first of all letters",
+    );
+    await settings.getByRole("radio", { name: "Verse" }).click();
+    await expect(translator).toHaveText("— G. U. Pope");
+    // The verse is split into its two lines
+    await expect(
+      newTab.getByTestId("kural-translation-text").locator("> div"),
+    ).toHaveText([
+      "A, as its first of letters, every speech maintains;",
+      'The "Primal Deity" is first through all the world\'s domains',
+    ]);
+
+    // Turning the meaning off disables its picker
+    await settings.getByRole("switch", { name: "Show Tamil meaning" }).click();
+    await expect(
+      settings.getByRole("radio", { name: /^Mu\. Varadarasanar/ }),
+    ).toBeDisabled();
+
+    // Persisted across reloads
+    await newTab.reload();
+    await expect(newTab.getByTestId("kural-meaning")).toHaveCount(0);
+    await expect(translation).toContainText("Primal Deity");
+
+    // Lazarus completed the prose from Kural 631
+    await settings.bringToFront();
+    await settings.getByRole("radio", { name: "Explanation" }).click();
+    await newTab.goto(`chrome-extension://${extensionId}/newtab.html#700`);
+    await expect(translator).toHaveText("— John Lazarus");
+  });
+
   test("hiding the Love section keeps it out of Randomise", async ({
     context,
     extensionId,

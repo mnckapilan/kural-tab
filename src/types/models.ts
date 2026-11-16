@@ -6,8 +6,18 @@
 export interface Kural {
   Line1: string;
   Line2: string;
+  /** Short English translation */
   Translation: string;
+  /** English prose explanation */
+  explanation: string;
+  /** English verse translation; its two lines are run together in the data */
+  couplet: string;
+  /** Tamil meaning by மு. வரதராசனார் (Mu. Varadarasanar) */
   mv: string;
+  /** Tamil meaning by சாலமன் பாப்பையா (Solomon Pappaiah) */
+  sp: string;
+  /** Tamil meaning by மு. கருணாநிதி (M. Karunanidhi) */
+  mk: string;
   Number: number;
 }
 
@@ -174,6 +184,31 @@ export interface Appearance {
 }
 
 /**
+ * Tamil meaning (உரை) to show. The ids are the field names on `Kural`.
+ */
+export const MEANING_SOURCE = {
+  VARADARASANAR: "mv",
+  PAPPAIAH: "sp",
+  KARUNANIDHI: "mk",
+} as const;
+
+export type MeaningSourceId =
+  (typeof MEANING_SOURCE)[keyof typeof MEANING_SOURCE];
+
+/**
+ * English text to show: the short translation, the prose explanation or the
+ * verse couplet.
+ */
+export const TRANSLATION_SOURCE = {
+  TRANSLATION: "translation",
+  EXPLANATION: "explanation",
+  COUPLET: "couplet",
+} as const;
+
+export type TranslationSourceId =
+  (typeof TRANSLATION_SOURCE)[keyof typeof TRANSLATION_SOURCE];
+
+/**
  * Content preferences stored in `contentItem`. `hiddenChapters` holds chapter
  * numbers (1-133), sorted and de-duplicated; sections and இயல் are derived.
  */
@@ -181,6 +216,8 @@ export interface ContentPreferences {
   showTranslation: boolean;
   showMeaning: boolean;
   showMetadata: boolean;
+  translationSource: TranslationSourceId;
+  meaningSource: MeaningSourceId;
   hiddenChapters: number[];
 }
 

@@ -23,6 +23,7 @@ import {
 import HiddenKuralNotice from "@/components/HiddenKuralNotice";
 import OpenSettingsButton from "@/components/OpenSettingsButton";
 import { useDelayedFlag } from "@/hooks/useDelayedFlag";
+import { englishCreditOf, englishTextOf } from "@/lib/contentOptions";
 
 function KuralDisplay() {
   const {
@@ -164,10 +165,22 @@ function KuralDisplay() {
               <KuralText kural={kural} />
 
               {content.showTranslation && (
-                <KuralExplanation explanation={kural.Translation} />
+                <KuralExplanation
+                  explanation={englishTextOf(kural, content.translationSource)}
+                  source={content.translationSource}
+                  credit={englishCreditOf(
+                    kural.Number,
+                    content.translationSource,
+                  )}
+                />
               )}
 
-              {content.showMeaning && <KuralMeaning meaning={kural.mv} />}
+              {content.showMeaning && (
+                <KuralMeaning
+                  meaning={kural[content.meaningSource]}
+                  source={content.meaningSource}
+                />
+              )}
             </m.div>
           )}
         </AnimatePresence>

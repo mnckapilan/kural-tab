@@ -86,7 +86,8 @@ Kural Tab is a Chrome extension (Manifest V3) that replaces the new tab page wit
   via hand-edited or synced storage). `isKuralHidden(n)` is also used by the favourites list.
 - `src/context/ContentContext.tsx` — `ContentProvider`/`useContent()`, used by both the new tab `App` (outside
   `KuralProvider`) and `SettingsApp`. Owns `ContentPreferences` (`showTranslation`, `showMeaning`, `showMetadata`,
-  `hiddenChapters`), persisted via `contentItem` and `.watch()`ed so changes made in the settings tab apply live to
+  `translationSource` (`TRANSLATION_SOURCE`: translation / explanation / couplet), `meaningSource` (`MEANING_SOURCE`:
+  `mv` Varadarasanar / `sp` Pappaiah / `mk` Karunanidhi, the `Kural` field names), `hiddenChapters`), persisted via `contentItem` and `.watch()`ed so changes made in the settings tab apply live to
   open new tabs. Has no localStorage hint (nothing here affects first paint); `isReady` flips once storage has been
   read and `KuralContext` treats the page as loading until then. Setters save immediately and are memoised.
 - `src/context/ThemeContext.tsx` — Owns the theme **preference** (`light` | `dark` | `system`, defaults to dark) and the
@@ -118,12 +119,16 @@ There are no `window.chrome` guards or `chrome.d.ts`; the app is only meant to r
 - `src/types/models.ts` — Central module for all interfaces plus the `THEME`, `FONT_SIZE`, `TAMIL_FONT`, `PALETTE` and `FILE_PATHS`
   constants (and `Appearance`). Prefer these constants over string literals.
 - `src/lib/appearanceOptions.ts` — Display lists the settings UI reads (labels, descriptions, font families, size scales, preset palette colours for the theme cards).
+- `src/lib/contentOptions.ts` — Meaning commentators (Tamil + English names, Kural 1 sample) and English styles for
+  the Content settings; `englishTextOf()` picks the English field and `englishCreditOf()` its translator (`Translation` = Shuddhananda Bharati, `explanation` = W. H. Drew for 1–630 / John Lazarus from 631, `couplet` = G. U. Pope 1886; checked against Project Madurai's texts); `splitCouplet()` splits the verse (`couplet`), whose two
+  lines are run together in the data, at the one lower-case/punctuation → capital join (1318 of 1330; the rest stay one line).
 - `src/lib/colour.ts` — Pure colour helpers (hex parse/normalise, WCAG luminance/contrast, `pickForeground`).
 - `src/services/kuralService.ts` — Static-method class. Fetches both JSON files in parallel, validates them,
   and throws `KuralDataError` on failure. `buildMetadataLookup()` flattens the section → chapterGroup →
   chapter hierarchy into a `Map<kuralNumber, KuralMetadataResult>` by expanding each chapter's
   `start`–`end` range, giving O(1) lookups.
-- `data/thirukkural.json` — ~2.2 MB, all 1330 kurals: `Line1`, `Line2`, `Translation`, `mv` (Tamil meaning), `Number`.
+- `data/thirukkural.json` — ~2.2 MB, all 1330 kurals: `Line1`, `Line2`, `Translation`, `explanation`, `couplet` (English verse),
+  `mv`/`sp`/`mk` (Tamil meanings by மு. வரதராசனார், சாலமன் பாப்பையா, மு. கருணாநிதி), `Number` (plus unused `transliteration1/2`).
 - `data/metadata.json` — ~52 KB, section/chapter hierarchy. The top-level JSON is an array with exactly
   **one** element (the திருக்குறள் root), which is why callers index `metadataData[0]` before walking it.
   Under that root: 3 sections (அறத்துப்பால்/Virtue, பொருட்பால்/Wealth, காமத்துப்பால்/Love) → chapterGroups
@@ -148,8 +153,8 @@ App
                 │   ├── HiddenKuralNotice  (replaces the block below when the current kural is hidden)
                 │   ├── KuralMetadata      (section + chapter; links to thirukkural.gokulnath.com; `showMetadata`)
                 │   ├── KuralText          (2-line Tamil couplet; always shown)
-                │   ├── KuralExplanation   (English translation; `showTranslation`)
-                │   ├── KuralMeaning       (Tamil meaning, mv field; `showMeaning`)
+                │   ├── KuralExplanation   (English text in the chosen style + translator; `showTranslation`)
+                │   ├── KuralMeaning       (chosen Tamil meaning + author in Tamil and English; `showMeaning`)
                 │   └── FavouritesPopover  (shadcn Popover: toggle + list; owns its open state)
                 └── dev indicator          (only when import.meta.env.DEV)
 ```
@@ -157,7 +162,8 @@ App
 The settings page tree is `SettingsApp > ErrorBoundary > MotionProvider > ThemeProvider > AppearanceProvider >
 ContentProvider > SettingsPage` (sidebar + `AppearanceSettings` / `ContentSettings` / `AboutSettings`, laid out with `SettingsGroup`/`SettingsRow`).
 `ContentSettings` is wired to `useContent()`: three switches ("Show English translation", "Show Tamil meaning",
-"Show section and chapter") and a section → இயல் → chapter checkbox tree (tri-state parents, `aria-label` "Show <english> (<tamil>)").
+"Show section and chapter"), a "Tamil meaning commentary" radiogroup (radios named "<English> (<Tamil>)") and an
+"English translation style" radiogroup (both disabled while their switch is off), and a section → இயல் → chapter checkbox tree (tri-state parents, `aria-label` "Show <english> (<tamil>)").
 The hierarchy comes from `KuralService.fetchSections()` (with loading and "Try Again" states). "Hide Love" is disabled once Love is
 fully hidden, "Show all" when nothing is hidden, and any change that would hide every chapter is rejected with an inline
 "At least one chapter must stay visible" message in the `role="status"` region (cleared by the next successful change). `AppearanceSettings` has a live preview (plain app

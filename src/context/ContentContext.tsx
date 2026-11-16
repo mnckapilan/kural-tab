@@ -7,7 +7,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { ContentPreferences } from "@/types/models";
+import type {
+  ContentPreferences,
+  MeaningSourceId,
+  TranslationSourceId,
+} from "@/types/models";
 import {
   DEFAULT_CONTENT,
   normaliseChapters,
@@ -23,6 +27,8 @@ interface ContentContextType {
   setShowTranslation: (show: boolean) => void;
   setShowMeaning: (show: boolean) => void;
   setShowMetadata: (show: boolean) => void;
+  setTranslationSource: (source: TranslationSourceId) => void;
+  setMeaningSource: (source: MeaningSourceId) => void;
   /** Replaces the hidden chapters (normalised before saving). */
   setHiddenChapters: (chapters: ReadonlyArray<number>) => void;
 }
@@ -83,6 +89,16 @@ export function ContentProvider({ children }: ContentProviderProps) {
     (showMetadata: boolean): void => save({ ...content, showMetadata }),
     [content, save],
   );
+  const setTranslationSource = useCallback(
+    (translationSource: TranslationSourceId): void =>
+      save({ ...content, translationSource }),
+    [content, save],
+  );
+  const setMeaningSource = useCallback(
+    (meaningSource: MeaningSourceId): void =>
+      save({ ...content, meaningSource }),
+    [content, save],
+  );
   const setHiddenChapters = useCallback(
     (chapters: ReadonlyArray<number>): void =>
       save({ ...content, hiddenChapters: normaliseChapters(chapters) }),
@@ -96,6 +112,8 @@ export function ContentProvider({ children }: ContentProviderProps) {
       setShowTranslation,
       setShowMeaning,
       setShowMetadata,
+      setTranslationSource,
+      setMeaningSource,
       setHiddenChapters,
     }),
     [
@@ -104,6 +122,8 @@ export function ContentProvider({ children }: ContentProviderProps) {
       setShowTranslation,
       setShowMeaning,
       setShowMetadata,
+      setTranslationSource,
+      setMeaningSource,
       setHiddenChapters,
     ],
   );
